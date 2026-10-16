@@ -29,6 +29,11 @@ jobs:
           sudo xcode-select -s "$NEWEST/Contents/Developer"
           xcodebuild -version
           xcrun swiftc --version
+          # The tests invoke swiftc directly, so pass the selected host SDK
+          # explicitly; unlike xcrun, the toolchain binary cannot infer it.
+          HOST_SDK=$(xcrun --sdk macosx --show-sdk-path)
+          test -d "$HOST_SDK"
+          echo "SDKROOT=$HOST_SDK" >> "$GITHUB_ENV"
           echo "SWIFTC=$(xcrun --find swiftc)" >> "$GITHUB_ENV"
 
       - name: 检查全部 Swift 文件语法

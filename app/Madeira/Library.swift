@@ -2088,7 +2088,7 @@ struct LibraryStatus: View {
     var body: some View {
         HStack(spacing: 8) {
             badge("JIT", jit)
-            badge("Memory+", memory)
+            badge("内存+", memory)
             if jit && memory {
                 Text("可以开始游玩").font(.footnote.weight(.semibold)).foregroundStyle(.secondary)
                     .padding(.leading, 4)
@@ -2583,7 +2583,7 @@ struct LibraryView: View {
         Form {
             // The status sits on the page, not in a card; JIT is enabled from the
             // toolbar's Enable JIT button.
-            if settingsShow("状态", "可以开始游玩", "ready to play", "JIT", "Memory+", "StikDebug", "status") {
+            if settingsShow("状态", "内存+", "可以开始游玩", "ready to play", "JIT", "Memory+", "StikDebug", "status") {
                 Section { LibraryStatus().listRowBackground(Color.clear) }
             }
             if settingsShow("配对", "内置", "JIT", "StikDebug", "built-in", "pairing", "LocalDevVPN") {
@@ -3047,7 +3047,7 @@ struct LibraryDetail: View {
                             Text(shape.label).tag(shape.value)
                         }
                         // A size none of them has, so the picker never shows a blank choice.
-                        if entry.resolution != metalFX?.value, let saved = ResolutionChoices.extra(entry.resolution, in: groups, note: "saved") {
+                        if entry.resolution != metalFX?.value, let saved = ResolutionChoices.extra(entry.resolution, in: groups, note: "已保存") {
                             Text(saved.label).tag(entry.resolution)
                         }
                     }

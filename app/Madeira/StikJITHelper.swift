@@ -114,9 +114,9 @@ enum StikJITHelper {
     /// Why the last allocatePool() returned nil, in words for the person playing
     /// (the library shows it); nil after a success.
     private(set) static var poolFailure: String?
-    static let noDebuggerMessage = "JIT is switched on, but StikDebug is not attached to Madeira, so the JIT memory cannot "
-        + "be set up. This happens when JIT is enabled from StikDebug's own app list. Tap Enable JIT: StikDebug then "
-        + "reopens Madeira with Madeira's script, ready to play."
+    static let noDebuggerMessage = "JIT 已开启，但 StikDebug 未连接到 Madeira，因此无法建立 JIT 内存。"
+        + "从 StikDebug 的应用列表启用 JIT 时可能发生这种情况。请轻点“启用 JIT”，"
+        + "让 StikDebug 使用 Madeira 的脚本重新打开应用，为游戏做好准备。"
 
     /// This app run's pool exists. The debugger detaches right after the pool is
     /// made, by design, so from then on "no debugger attached" is the normal state.
@@ -734,8 +734,8 @@ enum StikJITHelper {
                 return nil
             }
             poolFailure = requestUnanswered
-                ? "The debugger could not allocate the JIT memory. Restart Madeira, enable JIT and try again."
-                : "The JIT memory landed at an address Madeira cannot use. Restart Madeira, enable JIT and try again."
+                ? "调试器无法分配 JIT 内存。请重启 Madeira，启用 JIT 后重试。"
+                : "JIT 内存被分配到了 Madeira 无法使用的地址。请重启 Madeira，启用 JIT 后重试。"
             LogStore.shared.log("BAD POOL: no valid placement after retries. Killing in 10s — please relaunch.", level: .error)
             DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 10) {
                 LogStore.shared.log("BAD POOL — exiting now. Relaunch the app.", level: .error)
@@ -1117,8 +1117,8 @@ enum StikJITHelper {
 
         guard kr1 == KERN_SUCCESS else {
             LogStore.shared.log("vm_remap failed: \(kr1)", level: .error)
-            poolFailure = "Madeira could not map its JIT memory (vm_remap error \(kr1)). Restart Madeira and try again; "
-                + "if it keeps happening, send the diagnostic log."
+            poolFailure = "Madeira 无法映射 JIT 内存（vm_remap 错误 \(kr1)）。请重启 Madeira 后重试；"
+                + "如果问题持续出现，请提交诊断日志。"
             return nil
         }
 
@@ -1136,8 +1136,8 @@ enum StikJITHelper {
         guard kr2 == KERN_SUCCESS else {
             LogStore.shared.log("vm_protect(RW) failed: \(kr2)", level: .error)
             vm_deallocate(mach_task_self_, rwAddr, vm_size_t(poolSize))
-            poolFailure = "Madeira could not make its JIT memory writable (vm_protect error \(kr2)). Restart Madeira and try again; "
-                + "if it keeps happening, send the diagnostic log."
+            poolFailure = "Madeira 无法将 JIT 内存设为可写（vm_protect 错误 \(kr2)）。请重启 Madeira 后重试；"
+                + "如果问题持续出现，请提交诊断日志。"
             return nil
         }
 

@@ -1611,8 +1611,8 @@ struct ContentView: View {
             // Live debugger/JIT state, not the (macOS-only, never granted on
             // iOS) allow-jit entitlement the old badge checked.
             entitlementBadge("JIT", granted: debuggerAttached)
-            entitlementBadge("Memory+", granted: ents.increasedMemory)
-            entitlementBadge("64-bit VA", granted: ents.extendedVA)
+            entitlementBadge("内存+", granted: ents.increasedMemory)
+            entitlementBadge("64 位 VA", granted: ents.extendedVA)
             Spacer()
             // Device model rides in this row (the old standalone statusHeader
             // row above it spent ~50pt of vertical space on nothing else).
