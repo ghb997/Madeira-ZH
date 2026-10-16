@@ -163,6 +163,19 @@ llvm() {
 }
 
 dxmt() {
+    # Metal 27 changed the private builtin's parameter list. Use the public
+    # atomic API, preserving the original threadgroup / relaxed semantics.
+    python3 - <<'PY'
+from pathlib import Path
+p=Path('dxmt/src/airconv/shaders/air_tessellation.metal')
+s=p.read_text()
+old='__metal_atomic_fetch_add_explicit(out_count, 1, int(memory_order_relaxed), __METAL_MEMORY_SCOPE_THREADGROUP__)'
+new='atomic_fetch_add_explicit(reinterpret_cast<threadgroup atomic_int *>(out_count), 1, memory_order_relaxed)'
+if new not in s:
+    if s.count(old) != 1:
+        raise SystemExit('Metal atomic patch does not match the pinned DXMT source')
+    p.write_text(s.replace(old,new))
+PY
     if ! xcrun -sdk macosx metal -v > /dev/null 2>&1; then
         xcodebuild -downloadComponent MetalToolchain
     fi
