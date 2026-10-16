@@ -379,7 +379,7 @@ let phone = GuestDisplay.defaultMode(forLandscapeView: CGSize(width: 844, height
 let tablet = GuestDisplay.defaultMode(forLandscapeView: CGSize(width: 1024, height: 768))
 expect(phone.w == 1280 && phone.h == 720, "phone default mode is 1280x720")
 expect(tablet.w == 1152 && tablet.h == 864, "4:3 default mode is 1152x864 (cheapest 4:3 of at least 0.9 MP)")
-expect(DisplayMode.allCases.map { $0.label } == ["Fit", "Fill", "Stretch", "Aspect"], "the four Aspect & scaling choices")
+expect(DisplayMode.allCases.map { $0.label } == ["适合", "填充", "拉伸", "宽高比"], "the four Aspect & scaling choices")
 
 // ml1172: Resolution choices from the device's screen (points: shape; pixels: native).
 typealias RC = ResolutionChoices
@@ -393,9 +393,9 @@ let phone16 = screenOf(956, 440, 2868, 1320)        // iPhone 16 Pro Max, 19.5:9
 let ig = RC.groups(for: ipad)
 expect(RC.defaultSize(for: ipad) == (1152, 800), "iPad 11: default 1152x800 (720p's pixels)")
 expect(sizes(ig[0]) == ["944x656", "1152x800", "1728x1200", "2360x1640"], "iPad 11: screen-shaped choices, then native")
-expect(ig[0].choices.map(\.label) == ["944×656 · light", "1152×800 · default", "1728×1200 · ≈1080p", "2360×1640 · native"],
+expect(ig[0].choices.map(\.label) == ["944×656 · 轻量", "1152×800 · 默认", "1728×1200 · ≈1080p", "2360×1640 · 原生"],
        "iPad 11: labels name each level")
-expect(ig.map(\.title) == ["This screen's shape", "16:9 widescreen · bars above and below", "4:3 classic · bars at the sides"],
+expect(ig.map(\.title) == ["本屏幕比例", "16:9 宽屏 · 上下留黑边", "4:3 经典 · 两侧留黑边"],
        "iPad 11: group titles say how the PC shapes fit")
 expect(sizes(ig[1]) == ["960x540", "1280x720", "1600x900", "1920x1080", "2560x1440"] && sizes(ig[2]) == ["640x480", "800x600", "1024x768", "1280x960"],
        "iPad 11: the 16:9 and 4:3 sizes")
