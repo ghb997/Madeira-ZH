@@ -2,7 +2,9 @@
 
 本仓库会使用 Xcode 重新编译汉化后的 Swift、Objective-C 和 C/C++ 源码，
 并将未签名应用打包为 IPA。构建不需要 Apple 开发者证书，下载后须自行侧载签名。
-Windows 本机不能运行 Xcode；GitHub Actions 使用 macOS 15 托管构建机。
+Windows 本机不能运行 Xcode；GitHub Actions 使用官方 `xcode-27` 托管构建机
+（macOS 27），固定选择稳定版 Xcode 27.0。随仓库的 StikJIT 框架使用 Swift 6.4
+文本模块接口，因此编译需要这套工具链；应用最低运行系统仍为 iOS 26。
 
 ## 在 GitHub 上构建
 
@@ -46,7 +48,7 @@ JIT 助手和嵌入式组件，并保留所需的权限。
 
 ## 本地 macOS 构建
 
-准备 Xcode 26 或更高版本、Homebrew 的 `bison llvm lld ninja meson`，
+准备 Xcode 27.0 或兼容 Swift 6.4 的更新版本、Homebrew 的 `bison llvm lld ninja meson`，
 以及 Rust/rustup；将新版 bison、LLVM 和 lld 加入 PATH。然后运行：
 
 ```bash

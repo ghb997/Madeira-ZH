@@ -17,7 +17,9 @@ concurrency:
 
 jobs:
   build:
-    runs-on: macos-15
+    # StikJIT's distributed Swift interface requires the Xcode 27 compiler.
+    # Official public runner: actions/runner-images#14404.
+    runs-on: xcode-27
     timeout-minutes: 360
     env:
       BUILD_WOW64: ${{ inputs.build_wow64 }}
@@ -33,12 +35,12 @@ jobs:
       - name: 选择 Xcode 并检查 Swift 语法
         id: versions
         run: |
-          NEWEST=$(find /Applications -maxdepth 1 -name 'Xcode*.app' | sort -V | tail -1)
-          test -n "$NEWEST"
-          sudo xcode-select -s "$NEWEST/Contents/Developer"
+          XCODE=/Applications/Xcode_27.app/Contents/Developer
+          test -d "$XCODE"
+          sudo xcode-select -s "$XCODE"
           xcodebuild -version
           SDK=$(xcrun --sdk iphoneos --show-sdk-version)
-          test "${SDK%%.*}" -ge 26
+          test "${SDK%%.*}" -ge 27
           echo "sdk=$SDK" >> "$GITHUB_OUTPUT"
           echo "fex=$(git -C FEX rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           echo "wine=$(git -C wine rev-parse HEAD)" >> "$GITHUB_OUTPUT"
@@ -69,7 +71,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: wine/build-native
-          key: macos15-wine-host-v1-${{ steps.versions.outputs.wine }}-${{ steps.versions.outputs.wine_recipe }}
+          key: macos27-arm64-v2-wine-host-v1-${{ steps.versions.outputs.wine }}-${{ steps.versions.outputs.wine_recipe }}
 
       - name: 恢复 Wine、字体、加密及媒体库缓存
         id: wine
@@ -89,7 +91,7 @@ jobs:
             app/Madeira/libnettle.a
             app/Madeira/libhogweed.a
             app/Madeira/libgnutls.a
-          key: macos15-ios${{ steps.versions.outputs.sdk }}-wine-v1-${{ steps.versions.outputs.wine }}-${{ steps.versions.outputs.wine_recipe }}-${{ hashFiles('build/ntdll-unix/**', 'build/wineserver/**', 'build/win32u-unix/**', 'build/ffmpeg/**', 'build/crypto-unix/**', 'build/madsync/**', 'build/hidpad/**') }}
+          key: macos27-arm64-v2-ios${{ steps.versions.outputs.sdk }}-wine-v1-${{ steps.versions.outputs.wine }}-${{ steps.versions.outputs.wine_recipe }}-${{ hashFiles('build/ntdll-unix/**', 'build/wineserver/**', 'build/win32u-unix/**', 'build/ffmpeg/**', 'build/crypto-unix/**', 'build/madsync/**', 'build/hidpad/**') }}
 
       - name: 构建 Wine 原生库
         if: steps.wine.outputs.cache-hit != 'true'
@@ -127,7 +129,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: FEX/build-ios
-          key: macos15-ios${{ steps.versions.outputs.sdk }}-fex-v1-${{ steps.versions.outputs.fex }}-${{ steps.versions.outputs.fex_recipe }}
+          key: macos27-arm64-v2-ios${{ steps.versions.outputs.sdk }}-fex-v1-${{ steps.versions.outputs.fex }}-${{ steps.versions.outputs.fex_recipe }}
       - name: 构建 FEX
         if: steps.fex.outputs.cache-hit != 'true'
         run: bash tools/build-native-ci.sh fex
@@ -146,7 +148,7 @@ jobs:
             toolchains/llvm-project
             toolchains/llvm-ios-build
             toolchains/llvm-host-build
-          key: macos15-ios${{ steps.versions.outputs.sdk }}-llvm-v1-8dfdcc7b7-${{ steps.versions.outputs.llvm_recipe }}
+          key: macos27-arm64-v2-ios${{ steps.versions.outputs.sdk }}-llvm-v1-8dfdcc7b7-${{ steps.versions.outputs.llvm_recipe }}
       - name: 构建 LLVM iOS 静态库
         if: steps.llvm.outputs.cache-hit != 'true'
         run: bash tools/build-native-ci.sh llvm
@@ -165,7 +167,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: app/Madeira/libdxmt_combined.a
-          key: macos15-ios${{ steps.versions.outputs.sdk }}-dxmt-v1-${{ steps.versions.outputs.dxmt }}-${{ steps.versions.outputs.dxmt_recipe }}-${{ steps.versions.outputs.llvm_recipe }}-${{ hashFiles('build/dxmt-ios/build.sh', 'madeira-d3d12/src/**', 'madeira-d3d12/tests/native/msc_canary.mm') }}
+          key: macos27-arm64-v2-ios${{ steps.versions.outputs.sdk }}-dxmt-v1-${{ steps.versions.outputs.dxmt }}-${{ steps.versions.outputs.dxmt_recipe }}-${{ steps.versions.outputs.llvm_recipe }}-${{ hashFiles('build/dxmt-ios/build.sh', 'madeira-d3d12/src/**', 'madeira-d3d12/tests/native/msc_canary.mm') }}
       - name: 构建 DXMT 与 D3D12 原生运行时
         if: steps.dxmt.outputs.cache-hit != 'true'
         run: bash tools/build-native-ci.sh dxmt
@@ -184,7 +186,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: toolchains/llvm-mingw-20260421-ucrt-macos-universal
-          key: macos15-llvm-mingw-20260421-bd85a397-${{ steps.versions.outputs.mingw_recipe }}
+          key: macos27-arm64-v2-llvm-mingw-20260421-bd85a397-${{ steps.versions.outputs.mingw_recipe }}
       - name: 构建 Windows 运行时与 Madeira Dock
         run: bash tools/build-native-ci.sh runtime
       - name: 保存 Windows 交叉编译工具链

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build the actual app and native libraries. Run on macOS with Xcode 26+.
+# Build the actual app and native libraries. Run on macOS with Xcode 27+.
 # No Apple certificate, provisioning profile, or Apple account is used.
 set -euo pipefail
 R="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

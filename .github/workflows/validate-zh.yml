@@ -15,7 +15,7 @@ concurrency:
 jobs:
   jit-helper:
     name: 验证 iOS JIT 助手与框架兼容性
-    runs-on: macos-15
+    runs-on: xcode-27
     timeout-minutes: 10
     defaults:
       run:
@@ -26,9 +26,11 @@ jobs:
       - name: 检查 Xcode 与 iOS SDK
         run: |
           find /Applications -maxdepth 1 -name 'Xcode*.app' | sort -V
-          NEWEST=$(find /Applications -maxdepth 1 -name 'Xcode*.app' | sort -V | tail -1)
-          test -n "$NEWEST"
-          sudo xcode-select -s "$NEWEST/Contents/Developer"
+          # StikJIT 1.9.0 ships a Swift 6.4 interface. Use the runner's
+          # stable Xcode 27 rather than a newer beta or Xcode 26 compiler.
+          XCODE_PATH=/Applications/Xcode_27.app
+          test -d "$XCODE_PATH/Contents/Developer"
+          sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
           xcodebuild -version
           xcrun swiftc --version
           xcrun --sdk iphoneos --show-sdk-version
@@ -48,7 +50,7 @@ jobs:
             app/MadeiraJITHelper/MadeiraJITHelper.swift
 
   validate:
-    runs-on: macos-15
+    runs-on: xcode-27
     timeout-minutes: 30
     defaults:
       run:
@@ -58,9 +60,9 @@ jobs:
 
       - name: 选择 Xcode
         run: |
-          NEWEST=$(find /Applications -maxdepth 1 -name 'Xcode*.app' | sort -V | tail -1)
-          test -n "$NEWEST"
-          sudo xcode-select -s "$NEWEST/Contents/Developer"
+          XCODE_PATH=/Applications/Xcode_27.app
+          test -d "$XCODE_PATH/Contents/Developer"
+          sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
           xcodebuild -version
           xcrun swiftc --version
           # The tests invoke swiftc directly, so pass the selected host SDK
