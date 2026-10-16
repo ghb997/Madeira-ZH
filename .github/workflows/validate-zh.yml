@@ -13,6 +13,40 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  jit-helper:
+    name: 验证 iOS JIT 助手与框架兼容性
+    runs-on: macos-15
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 检查 Xcode 与 iOS SDK
+        run: |
+          find /Applications -maxdepth 1 -name 'Xcode*.app' | sort -V
+          NEWEST=$(find /Applications -maxdepth 1 -name 'Xcode*.app' | sort -V | tail -1)
+          test -n "$NEWEST"
+          sudo xcode-select -s "$NEWEST/Contents/Developer"
+          xcodebuild -version
+          xcrun swiftc --version
+          xcrun --sdk iphoneos --show-sdk-version
+
+      - name: 对实际 iOS JIT 助手执行类型检查
+        run: |
+          # Parsing app Swift alone does not import the vendored framework's
+          # textual module interface. Check the real helper against the device
+          # SDK independently of the lengthy Wine/FEX build.
+          xcrun --sdk iphoneos swiftc -typecheck -parse-as-library \
+            -swift-version 5 -application-extension -module-name MadeiraJITHelper \
+            -target arm64-apple-ios26.0 \
+            -sdk "$(xcrun --sdk iphoneos --show-sdk-path)" \
+            -module-cache-path "$RUNNER_TEMP/swift-jit-helper-modules" \
+            -F app/Frameworks/StikJIT.xcframework/ios-arm64 \
+            app/Madeira/JITBuiltInMessages.swift \
+            app/MadeiraJITHelper/MadeiraJITHelper.swift
+
   validate:
     runs-on: macos-15
     timeout-minutes: 30

@@ -19,6 +19,8 @@ Madeira 是仍在开发的实验性项目。游戏兼容性、速度与稳定性
 
 独立应用标识为 `com.ghb997.MadeiraZH`，JIT 助手为其 `.JITHelper` 扩展。侧载工具可能为两者追加团队标识。独立标识允许它与原版分别安装，但不会自动读取原版的应用沙盒；迁移前请备份游戏与存档。
 
+本分支沿用上游的 `madeira://` 链接协议。如果两版同时安装，JIT 返回链接和主屏幕快捷方式可能打开另一版，建议迁移完成后只保留需要使用的版本。
+
 ## 下载与安装
 
 1. 在本仓库的 [Releases](https://github.com/ghb997/Madeira-ZH/releases) 下载名称包含 `unsigned` 的 IPA。如果尚无发布版本，请查看 [Actions](https://github.com/ghb997/Madeira-ZH/actions) 中成功运行的构建产物。

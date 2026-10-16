@@ -55,7 +55,7 @@ wine() {
         (cd wine/build-native && run_log wine-native-configure ../configure --enable-win64 --disable-tests --without-x)
         run_log wine-native-tools make -C wine/build-native -j"$N" \
             tools/widl/widl tools/wrc/wrc tools/wmc/wmc tools/winebuild/winebuild
-        run_log wine-native-headers make -C wine/build-native -j"$N" include
+        run_log wine-native-headers make -C wine/build-native -j"$N" include/all
     fi
     test -x wine/build-native/tools/widl/widl
     (cd wine/build-macos && run_log wine-configure ../configure \
@@ -69,7 +69,7 @@ wine() {
         --without-v4l2 --without-gphoto --without-inotify --without-sane \
         --without-pulse --without-alsa --without-oss --without-capi --without-cups \
         --without-krb5 --without-ldap --without-netapi --without-sdl --without-udev --without-unwind)
-    run_log wine-headers make -C wine/build-macos -j"$N" include
+    run_log wine-headers make -C wine/build-macos -j"$N" include/all
     cp -n wine/build-native/include/*.h wine/build-macos/include/ || true
     cat >> wine/build-macos/include/config.h <<'EOF'
 /* iOS SDK + statically linked GnuTLS, used by Madeira's Unix shims. */
