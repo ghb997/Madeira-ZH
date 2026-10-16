@@ -297,7 +297,7 @@ expect(inDesk.commandPreview == "explorer.exe /desktop=shell,1280x720 \"C:\\Game
        "command line, Wine desktop: explorer's whole command (\(inDesk.commandPreview))")
 expect(bat.commandPreview == "explorer.exe /desktop=shell,1280x720 cmd /c \"C:\\Games\\Tool\\run game.bat\" fast"
        && svcBat.commandPreview.hasPrefix("cmd.exe /c \"C:\\madeira-games\\"), "command line: a batch file through cmd")
-expect(svc.commandPreview.hasSuffix(".bat\"\n(the batch starts services.exe, then game.exe -windowed)"),
+expect(svc.commandPreview.hasSuffix(".bat\"\n（批处理先启动 services.exe，再启动 game.exe -windowed）"),
        "command line, services batch: what the batch starts too (\(svc.commandPreview))")
 var pctBat = svcBat; pctBat.arguments = "100%"
 expect(pctBat.servicesScript?.hasSuffix("call \"C:\\Games\\Tool\\run game.bat\" 100%%%%\r\n") == true, "services + .bat: '%' doubled twice on the CALL line")
@@ -402,18 +402,18 @@ expect(sizes(ig[1]) == ["960x540", "1280x720", "1600x900", "1920x1080", "2560x14
 expect(!RC.fills(1408, 648, screen: ipad) && RC.fills(1408, 648, screen: phone16), "1408x648 is a phone's shape, not an iPad's")
 expect(RC.defaultSize(for: phone16) == (1408, 648) && sizes(RC.groups(for: phone16)[0]) == ["1168x536", "1408x648", "1568x720", "2120x976", "2868x1320"],
        "iPhone 16 Pro Max: its own shape; the default stays 1408x648, its ≈720p; 720 lines for games that need them")
-expect(RC.groups(for: phone16)[0].choices[2].label == "1568×720 · 720 lines" && RC.screen720(for: phone16)! == (1568, 720)
+expect(RC.groups(for: phone16)[0].choices[2].label == "1568×720 · 720 行" && RC.screen720(for: phone16)! == (1568, 720)
        && RC.screen720(for: ipad) == nil && RC.screen720(for: screenOf(667, 375, 1334, 750)) == nil,
        "720 lines only where the default has fewer (a phone), in the screen's shape")
 let g13 = RC.groups(for: ipad13)
-expect(g13[2].title == "4:3 classic · fills this screen" && RC.defaultSize(for: ipad13).h > 0, "iPad 13: 4:3 fills the screen")
+expect(g13[2].title == "4:3 经典 · 铺满此屏幕" && RC.defaultSize(for: ipad13).h > 0, "iPad 13: 4:3 fills the screen")
 let seG = RC.groups(for: screenOf(667, 375, 1334, 750))
-expect(sizes(seG[0]).contains("1280x720") && !sizes(seG[1]).contains("1280x720") && seG[1].title.hasSuffix("fills this screen"),
+expect(sizes(seG[0]).contains("1280x720") && !sizes(seG[1]).contains("1280x720") && seG[1].title.hasSuffix("铺满此屏幕"),
        "iPhone SE: 1280x720 listed once, in its own shape")
 expect(sizes(seG[0]).last == "1334x750" && !sizes(seG[0]).contains("1920x1080"), "iPhone SE: nothing past native")
 expect(RC.extra("1408x648", in: ig, note: "saved")?.label == "1408×648 · saved" && RC.extra("944x656", in: ig, note: "saved") == nil
        && RC.extra("junk", in: ig, note: "saved") == nil, "a saved size none of the choices has is listed once")
-expect(RC.metalFX(for: ipad, in: ig)?.label == "688×480 · for MetalFX 1.5×" && RC.metalFX(for: ipad13, in: g13) == nil
+expect(RC.metalFX(for: ipad, in: ig)?.label == "688×480 · 适用于 MetalFX 1.5×" && RC.metalFX(for: ipad13, in: g13) == nil
        && RC.metalFX(for: phone16, in: RC.groups(for: phone16))?.value == "1040x480",
        "MetalFX 1.5×: the screen's shape at 480 lines, not repeated where 4:3 already has 640x480")
 
@@ -516,7 +516,7 @@ check('__attribute__((weak)) int madeira_dxmt_has_40_cap(void) {\n    return 0;'
 check('LibraryView(play: launchLibraryEntry' in content, 'ContentView shows the library when it is the chosen interface')
 check('runWineFullSequence(profile: entry)' in content and 'profile.applyEnvironment()' in content,
       'library launches use the shared launch path with the profile applied')
-check('Button("Use New Interface")' in content, 'the developer interface can switch back to the library')
+check('Button("使用新界面")' in content, 'the developer interface can switch back to the library')
 loop = bridge.index('for (NSString *raw in [text componentsSeparatedByCharactersInSet:')
 snap = bridge.find('game_set[i] = getenv(per_launch[i]) != NULL;')
 bat_add = lib[lib.index('if ["bat", "cmd"].contains(url.pathExtension.lowercased())'):]
@@ -539,7 +539,7 @@ check('LibraryController.shared' in gamepad and 'library.ownsInput' in gamepad,
 detail = block(lib, 'struct LibraryDetail: View')
 hud = block(lib, 'struct LibraryHUD: View')
 model = block(lib, 'final class LibraryModel: ObservableObject')
-check('Picker("Resolution", selection: $entry.resolution)' in detail and 'Desktop size' not in lib,
+check('Picker("分辨率", selection: $entry.resolution)' in detail and 'Desktop size' not in lib,
       'game details: one Resolution picker for every entry (not only the Desktop)')
 check('ResolutionChoices.groups()' in detail and 'Section(group.title)' in detail and 'ResolutionChoices.extra(entry.resolution' in detail
       and 'presetResolutions' not in lib and 'MADEIRA_SCREEN_SHAPE_RESOLUTION' not in lib,
@@ -553,15 +553,15 @@ check('resetPhoneResolution()' in block(model, 'private init()') and 'Resolution
       'ml1172: 1408x648 entries are reset once on a screen of another shape')
 check('ResolutionChoices.groups()' in block(content, 'private var resolutionPicker') and 'DesktopResolution' not in content,
       'ml1172: the developer Resolution menu shows the same choices')
-check('Picker("Aspect & scaling"' in detail and 'entry.display = $0' in detail, 'game details: Aspect & scaling')
+check('Picker("宽高比与缩放"' in detail and 'entry.display = $0' in detail, 'game details: Aspect & scaling')
 # The Desktop's details page carries every setting a game's page does. What the Desktop
 # entry leaves out names or starts one particular program: its title and cover, how it
 # starts, its launch arguments, a Home Screen link, its executable. A block gated off
 # for the Desktop must be one of those and hold no other control.
-form_body = detail[:detail.index('.navigationTitle("Game details")')]
-desktop_out = ('Section("Library details")', 'Picker("Start"', 'TextField("Launch arguments"',
-               'Text("Home Screen")', 'Section("Executable")')
-desktop_controls = {'Picker("Start"', 'Toggle("Start Windows services first"'}
+form_body = detail[:detail.index('.navigationTitle("游戏详情")')]
+desktop_out = ('Section("游戏库信息")', 'Picker("启动"', 'TextField("启动参数"',
+               'Text("主屏幕")', 'Section("可执行文件")')
+desktop_controls = {'Picker("启动"', 'Toggle("先启动 Windows 服务"'}
 hidden = []
 for gate in re.finditer(r'\bif\b[^{\n]*(?:entry\.desktop != true|entry\.usesLaunchOptions)[^{\n]*\{', form_body):
     depth, end = 1, gate.end()
@@ -573,14 +573,14 @@ for gate in re.finditer(r'\bif\b[^{\n]*(?:entry\.desktop != true|entry\.usesLaun
     controls = {c if c.endswith('"') or '"' not in c else c.rstrip('"') for c in controls}
     if not any(marker in gated for marker in desktop_out) or {c for c in controls if not any(c.startswith(a) for a in desktop_controls)}:
         hidden.append(gated.strip().splitlines()[0][:80])
-check(not hidden and 'Picker("MetalFX upscaling"' in form_body,
+check(not hidden and 'Picker("MetalFX 超分辨率"' in form_body,
       'Desktop details: every setting a game has, only program-specific sections left out (gated: %s)' % hidden)
-check('LabeledContent("Control opacity")' in detail and 'LabeledContent("Control size")' in detail,
+check('LabeledContent("控件透明度")' in detail and 'LabeledContent("控件大小")' in detail,
       'game details: control opacity and size sliders')
-check('Picker("Aspect & scaling", selection: $model.displayMode)' in hud and 'MADEIRA_SESSION_TOOLS' in hud,
+check('Picker("宽高比与缩放", selection: $model.displayMode)' in hud and 'MADEIRA_SESSION_TOOLS' in hud,
       'in-game menu: Aspect & scaling (MADEIRA_SESSION_TOOLS)')
-check('LabeledContent("Opacity")' in hud and 'LabeledContent("Size")' in hud, 'in-game menu: control opacity and size')
-check('Text("Touch").tag("touch")' in lib and 'input.touchMode = value == "touch"' in lib,
+check('LabeledContent("透明度")' in hud and 'LabeledContent("大小")' in hud, 'in-game menu: control opacity and size')
+check('Text("触摸模式").tag("touch")' in lib and 'input.touchMode = value == "touch"' in lib,
       'pointer settings: Absolute, Relative and Touch')
 save = block(model, 'func saveCurrentProfile()')
 check('entry.display = displayMode.rawValue' in save and 'entry.controlOpacity = opacity' in save
@@ -591,8 +591,8 @@ check('displayMode = entry.displayMode' in begin and 'controls.sizeScale =' in b
 check('GuestDisplay.configureSessionDefault(' in block(lib, 'func configureLaunch('),
       'every launch sets the virtual monitor from the Resolution')
 # ml1163: a game's launch options in its details page.
-check('Picker("Start"' in detail and 'entry.launchMode = $0 == "desktop"' in detail and 'entry.workingDirectory = ' in detail
-      and 'Toggle("Start Windows services first"' in detail,
+check('Picker("启动"' in detail and 'entry.launchMode = $0 == "desktop"' in detail and 'entry.workingDirectory = ' in detail
+      and 'Toggle("先启动 Windows 服务"' in detail,
       'game details: start mode, working folder and services')
 check('Text(entry.commandPreview)' in detail and 'lastPathComponent] + (entry.arguments' not in detail,
       'game details: the command line shows what the next start runs, launch mode included')
@@ -609,7 +609,7 @@ check('TouchControlsModel.diameter(control)' in content and 'library.opacity' in
 launch = block(hud, 'private func launchView(')
 glyph = block(hud, 'private func launchGlyph(')
 row = block(launch, 'HStack(spacing: 14)')
-check('launchGlyph(showLogs ? "Hide live log" : "Show live log", "text.alignleft", on: showLogs)' in row
+check('launchGlyph(showLogs ? "隐藏实时日志" : "显示实时日志", "text.alignleft", on: showLogs)' in row
       and 'Button(showLogs ?' not in launch,
       'starting screen: the live-log control is a glyph in one row')
 check('Image(systemName: symbol)' in glyph and '.accessibilityLabel(label)' in glyph and 'Text(' not in glyph
@@ -617,7 +617,7 @@ check('Image(systemName: symbol)' in glyph and '.accessibilityLabel(label)' in g
 settings = block(lib, 'private var settings: some View')
 form = block(settings, 'Form {')
 last = form[[m.start() for m in re.finditer(r'\bSection\b', form)][-1]:]
-check('header: { Text("Credits") }' in last and form.count('Text("Credits")') == 1,
+check('header: { Text("致谢") }' in last and form.count('Text("致谢")') == 1,
       'Settings: Credits is the last section')
 for who in ('name: "Will Faust", handle: "willfaust"', 'name: "Nick", handle: "125hz"',
             'name: "Jfishin", handle: "Jfishin"', 'name: "Jesse", handle: "JesseLovelace"',
@@ -629,7 +629,7 @@ for who in ('name: "Will Faust", handle: "willfaust"', 'name: "Nick", handle: "1
     check('MadeiraCredit(' + who in last, 'Settings credits: ' + who)
 check('https://github.com/\\(handle)' in block(lib, 'struct MadeiraCredit: View'),
       'a credit links the GitHub account')
-check('complete application folders' not in lib and 'Section("Library")' not in settings,
+check('complete application folders' not in lib and 'Section("游戏库")' not in settings,
       'Settings: the drive_c note is removed')
 
 print('check-frontend:', 'FAIL' if failures else 'PASS')

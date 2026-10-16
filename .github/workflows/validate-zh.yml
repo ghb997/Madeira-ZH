@@ -1,0 +1,61 @@
+name: 验证简体中文界面与核心行为
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: madeira-zh-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: macos-15
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 选择 Xcode
+        run: |
+          NEWEST=$(find /Applications -maxdepth 1 -name 'Xcode*.app' | sort -V | tail -1)
+          test -n "$NEWEST"
+          sudo xcode-select -s "$NEWEST/Contents/Developer"
+          xcodebuild -version
+          xcrun swiftc --version
+          echo "SWIFTC=$(xcrun --find swiftc)" >> "$GITHUB_ENV"
+
+      - name: 检查全部 Swift 文件语法
+        run: |
+          find app -name '*.swift' -print0 | while IFS= read -r -d '' f; do
+            xcrun swiftc -frontend -parse "$f"
+          done
+
+      # These host checks compile production Foundation/C blocks and use local
+      # fixtures. They require neither Wine/FEX builds nor Steam credentials.
+      - name: 验证引导流程
+        run: python3 tests/host/check-onboarding.py
+
+      - name: 验证触控布局
+        run: python3 tests/host/check-control-presets.py
+
+      - name: 验证游戏库与显示设置
+        run: python3 tests/host/check-frontend.py
+
+      - name: 验证 Steam 原生登录
+        run: python3 tests/host/check-steam-signin-native.py
+
+      - name: 验证 Steam 游戏管理
+        run: python3 tests/host/check-steam-games.py
+
+      - name: 验证 Steam 云存档
+        run: python3 tests/host/check-steam-cloud.py
+
+      - name: 验证 JIT 配置
+        run: python3 tests/host/check-jit-method.py

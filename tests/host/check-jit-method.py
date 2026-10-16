@@ -137,7 +137,7 @@ project = (root / "app/Madeira.xcodeproj/project.pbxproj").read_text()
 helper_source = (root / "app/MadeiraJITHelper/MadeiraJITHelper.swift").read_text()
 require(project.count('PRODUCT_BUNDLE_IDENTIFIER = "$(MADEIRA_BUNDLE_IDENTIFIER)";') == 2
         and project.count('PRODUCT_BUNDLE_IDENTIFIER = "$(MADEIRA_BUNDLE_IDENTIFIER).JITHelper";') == 2
-        and project.count("MADEIRA_BUNDLE_IDENTIFIER = com.willfaust.madeora;") == 2
+        and project.count("MADEIRA_BUNDLE_IDENTIFIER = com.ghb997.MadeiraZH;") == 2
         and "AppExtensionPoint" not in helper_source,
         "one setting, MADEIRA_BUNDLE_IDENTIFIER, names the app and the helper")
 
@@ -154,7 +154,7 @@ require("if let jitProblem { jitConnectionActions(jitProblem, retry: enableJIT) 
 # (an alert inside the Library page waited until that tab came back).
 body = library_source[library_source.index('struct LibraryView: View {'):]
 body = body[body.index('    var body: some View {'):body.index('    @ToolbarContentBuilder private var libraryToolbar')]
-require('.alert(jitProblem == nil ? "Library" : "Couldn\'t Enable JIT"' in body,
+require('.alert(jitProblem == nil ? "游戏库" : "无法启用 JIT"' in body,
         "the library's error alert is on the tab view, shown on the Settings tab as well")
 require('URL(string: "localdevvpn://enable?scheme=madeira")' in setup
         and "localdevvpn" in app_plist["LSApplicationQueriesSchemes"]
@@ -174,7 +174,7 @@ require("launchAfterJIT = nil" in ended
         and "guard started, StikJITHelper.ready, library.current == nil, wine_process_is_running() == 0 else {" in ended
         and ended.index("launchAfterJIT = nil") < ended.index("library.startingJIT = nil") < ended.index("launch()"),
         "the waiting game starts once, only when JIT came on and nothing else started")
-require('if model.startingJIT == entry.id {' in library and 'Text("Starting JIT")' in library and 'ProgressView()' in library
+require('if model.startingJIT == entry.id {' in library and 'Text("正在启用 JIT")' in library and 'ProgressView()' in library
         and "if selected?.id == entry.id, model.startingJIT != entry.id { selected = nil }" in library
         and ".onChange(of: jit.showSetup) { _, show in if show { selected = nil } }" in library,
         "the Play button reads Starting JIT with a spinner meanwhile; the details page stays up for it, "

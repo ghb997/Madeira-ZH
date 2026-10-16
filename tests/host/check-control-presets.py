@@ -104,17 +104,17 @@ for (label, screen) in screens {
 let ids = Set(ControlPresetLayout.xbox(for: .referencePhone).map { $0.id })
 require(ids.count == expected.count, "built-in controls have distinct ids")
 
-// --- The Xbox controller preset as data: what a user is offered and what each button does.
+// --- The Xbox 控制器 preset as data: what a user is offered and what each button does.
 let builtIn = ControlPresetStore.builtIns
-require(builtIn.count == 1 && builtIn[0].id == ControlPresetLayout.xboxID && builtIn[0].name == "Xbox controller",
-        "one built-in, listed as \"Xbox controller\"")
+require(builtIn.count == 1 && builtIn[0].id == ControlPresetLayout.xboxID && builtIn[0].name == "Xbox 控制器",
+        "one built-in, listed as \"Xbox 控制器\"")
 require(builtIn[0].controls.count == 18 && Set(builtIn[0].controls.compactMap { $0.action.padName }) == Set(expected),
         "the built-in binds the 18 controller inputs, none twice")
 require(builtIn[0].controls.allSatisfy { c in
             guard let n = c.action.padName else { return false }
             return TouchPadAction.sample(n, x: 1, y: 1) != GamepadSample()
         }, "every built-in binding produces a non-neutral XInput sample when pressed or deflected")
-require(ControlPresetStore().preset(ControlPresetLayout.xboxID)?.name == "Xbox controller"
+require(ControlPresetStore().preset(ControlPresetLayout.xboxID)?.name == "Xbox 控制器"
         && ControlPresetStore(user: []).all.first?.id == ControlPresetLayout.xboxID,
         "a store with no user layouts still offers the built-in first")
 let one = ControlPresetStore(user: [ControlPreset(id: "u", name: "Mine", controls: [])])
@@ -162,17 +162,17 @@ require((try? ControlPresetStore.decoded(Data(saved.utf8)))?.preset("p")?.contro
 let xbox = ControlPresetLayout.xboxID
 require(ControlPresetStore.isBuiltIn(xbox) && store.all.first?.id == xbox, "the controller layout is built in and listed first")
 require(!store.delete(id: xbox) && !store.overwrite(id: xbox, controls: []), "built-in not deletable or writable")
-require(store.save(name: "xbox CONTROLLER ", controls: [], newID: fixedID) == .refusedBuiltIn, "a built-in's name is refused")
+require(store.save(name: "xbox 控制器 ", controls: [], newID: fixedID) == .refusedBuiltIn, "a built-in's name is refused")
 require(store.save(name: "   ", controls: [], newID: fixedID) == .refusedEmpty, "an empty name is refused")
 require(store.save(name: "racing", controls: [custom], newID: fixedID) == .replaced("user-1")
         && store.preset("user-1")?.controls == [custom], "saving under a user layout's name replaces it")
 require(store.overwrite(id: "user-2", controls: layout) && store.preset("user-2")?.controls == layout, "overwrite a user layout")
-require(store.nextCustomName() == "Custom Layout 1", "first custom name")
-_ = store.save(name: "Custom Layout 1", controls: [], newID: fixedID)
-_ = store.save(name: "custom layout 3", controls: [], newID: fixedID)
-require(store.nextCustomName() == "Custom Layout 2", "the lowest free number, case-insensitive")
-_ = store.save(name: "Custom Layout 2", controls: [], newID: fixedID)
-require(store.nextCustomName() == "Custom Layout 4", "numbers already taken are skipped")
+require(store.nextCustomName() == "自定义布局 1", "first custom name")
+_ = store.save(name: "自定义布局 1", controls: [], newID: fixedID)
+_ = store.save(name: "自定义布局 3", controls: [], newID: fixedID)
+require(store.nextCustomName() == "自定义布局 2", "the lowest free number, case-insensitive")
+_ = store.save(name: "自定义布局 2", controls: [], newID: fixedID)
+require(store.nextCustomName() == "自定义布局 4", "numbers already taken are skipped")
 require(store.delete(id: "user-2") && store.preset("user-2") == nil && !store.delete(id: "user-2"), "delete once")
 require(ControlPresetStore.clean(String(repeating: "x", count: 99)).count == ControlPresetStore.maxNameLength, "names are capped")
 
@@ -229,7 +229,7 @@ assert 'm.controls.isEmpty' in default and 'm.needsDefaultLayout = false' in def
 assert 'Self.touchPad' in function(presets, 'var defaultPending: Bool {'), 'no controller default without touch XInput'
 overlay = function(content, 'struct TouchControlsOverlay: View {')
 assert 'ControlPresetsModel.enabled && m.visible && !m.editing' in overlay, 'menu only while touch controls are shown'
-assert 'if m.editing && Self.editorDone {' in overlay and 'Text("Done")' in overlay
+assert 'if m.editing && Self.editorDone {' in overlay and 'Text("完成")' in overlay
 assert 'TouchControlsOverlay.showsLayoutMenu(self) ? 3 : 2' in model, 'the menu button is hit-testable'
 window = function(content, 'final class ControlsWindow: UIWindow {')
 assert window.index('if m.editing {') < window.index('!hit.isDescendant(of: root)') \
@@ -246,13 +246,13 @@ hud = function(lib, 'struct LibraryHUD: View {')
 menu = function(hud, 'private var menu: some View {')
 row = menu.index('ControlLayoutMenu(style: .row)')
 assert 'if session && !m.editing { LibraryHUD() } else { topBar }' in overlay, 'a session shows the HUD instead of the top bar'
-assert menu.index('Toggle("Touch controls"') < row < menu.index('LabeledContent("Opacity")'), \
+assert menu.index('Toggle("触屏控制"') < row < menu.index('LabeledContent("透明度")'), \
     'the Session menu offers the layout menu with the touch-control settings'
 assert 'controls.visible && ControlPresetsModel.enabled' in menu[row - 80:row], \
     'only while touch controls are on and MADEIRA_CONTROL_PRESETS is not 0'
-assert 'model.saveCurrentProfile()' in menu[row:menu.index('LabeledContent("Opacity")')], 'a chosen layout is saved to the game'
+assert 'model.saveCurrentProfile()' in menu[row:menu.index('LabeledContent("透明度")')], 'a chosen layout is saved to the game'
 layout_menu = function(presets, 'struct ControlLayoutMenu: View {')
-assert 'enum Style { case glass, row }' in layout_menu and 'LabeledContent("Controller layout")' in layout_menu
+assert 'enum Style { case glass, row }' in layout_menu and 'LabeledContent("控制器布局")' in layout_menu
 assert 'ControlLayoutMenu()' in overlay, 'the overlay keeps its top-bar button, unchanged'
 entry = function(lib, 'struct LibraryEntry: Codable, Identifiable {')
 assert 'var controlLayout: String?' in entry, 'optional, so older library files decode'

@@ -103,14 +103,14 @@ require('if onboarding.available {' in jit_settings_section and 'onboarding.reru
 # ------------------------------------------------------------------ static: skippable steps
 view = block(onboarding, 'struct OnboardingView: View')
 for page in ['private var signInPage', 'private var dockClientPage']:
-    require('secondary("Set up later") { model.next() }' in block(view, page), f'{page.split()[-1]}: Set up later')
-require('secondary("Skip setup") { model.skip() }' in block(view, 'private var welcome'), 'welcome: visible Skip setup')
+    require('secondary("稍后设置") { model.next() }' in block(view, page), f'{page.split()[-1]}: Set up later')
+require('secondary("跳过设置") { model.skip() }' in block(view, 'private var welcome'), 'welcome: visible Skip setup')
 jit_page = block(view, 'private var jitPage')
 choices = block(view, 'private var jitChoices')
 require(all(f'case .{path}: {guide}' in jit_page for path, guide in
             [('onDevice', 'onDeviceGuide'), ('pairingFile', 'pairingFileGuide'), ('stikDebug', 'stikDebugGuide')]),
         'JIT: each of the three ways in has its own guide')
-require(all(f'jitChoice("{title}"' in choices for title in ['In-app', 'In-app with pairing file', 'StikDebug'])
+require(all(f'jitChoice("{title}"' in choices for title in ['应用内配对', '在应用内使用配对文件', 'StikDebug'])
         and 'enabled: OnDevicePairing.isSupported' in choices,
         'JIT: In-app (iOS 27), In-app with pairing file, StikDebug')
 on_device = block(view, 'private var onDeviceGuide')
@@ -122,13 +122,13 @@ require('importPairingFile()' in block(view, 'private var pairingFileGuide')
         'JIT: the pairing-file guide imports')
 require('jit.method = .stikDebug' in block(view, 'private var stikDebugGuide'), 'JIT: the StikDebug guide selects StikDebug')
 for guide in ['onDeviceGuide', 'pairingFileGuide', 'stikDebugGuide']:
-    require('secondary("Back to options") { leaveGuide() }' in block(view, f'private var {guide}'), f'JIT: {guide} goes back')
+    require('secondary("返回选项") { leaveGuide() }' in block(view, f'private var {guide}'), f'JIT: {guide} goes back')
 require('pairing.cancel()' in block(view, 'private func leaveGuide'), 'JIT: leaving the guide stops a waiting pairing')
-require("secondary(\"I'll do this later\") { model.next() }" in choices, 'JIT: visible defer choice')
+require("secondary(\"稍后再设置\") { model.next() }" in choices, 'JIT: visible defer choice')
 require('jit.importPairingFile(url)' in view and 'jit.method = .builtIn' in view,
         'JIT: validated import selects Built-in StikJIT through the coordinator')
 ldv_page = block(view, 'private var localDevVPNPage')
-require('UIApplication.shared.open(LocalDevVPN.appStore)' in ldv_page and "secondary(\"I'll do this later\") { model.next() }" in ldv_page
+require('UIApplication.shared.open(LocalDevVPN.appStore)' in ldv_page and "secondary(\"稍后再设置\") { model.next() }" in ldv_page
         and 'if localDevVPNInstalled' in ldv_page and 'case .localDevVPN: localDevVPNPage' in view,
         "LocalDevVPN's page sends a missing LocalDevVPN to the App Store, and can be skipped")
 require('if phase == .active { localDevVPNInstalled = LocalDevVPN.isInstalled }' in view

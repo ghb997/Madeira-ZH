@@ -6,6 +6,24 @@ The diagnostic-only FEX fallback follows the Apple allocator configuration.
 See docs/BUILDING-ZH.md for source provenance and build limitations.
 """
 from pathlib import Path
+import hashlib
+import re
+import sys
+
+
+def cache_keys() -> None:
+    """Invalidate each cache when its build recipe or shared helpers change."""
+    source = Path("tools/build-native-ci.sh").read_text(encoding="utf-8")
+    functions = dict(re.findall(r"(?ms)^(\w+)\(\) \{\n(.*?)^\}\n", source))
+    shared = source.split("run_log()", 1)[0] + functions["run_log"] + functions["fetch_git"]
+    patches = Path(__file__).read_text(encoding="utf-8")
+    for stage in ("wine", "fex", "llvm", "dxmt", "mingw", "runtime"):
+        recipe = shared + functions[stage]
+        if stage in ("wine", "fex"):
+            recipe += functions["prepare"] + patches
+        if stage == "runtime":
+            recipe += functions["mingw"]
+        print(f"{stage}_recipe={hashlib.sha256(recipe.encode()).hexdigest()[:20]}")
 
 
 def replace(path: str, old: str, new: str) -> None:
@@ -42,4 +60,9 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    if sys.argv[1:] == ["--cache-keys"]:
+        cache_keys()
+    elif sys.argv[1:]:
+        raise SystemExit("Usage: build-native-ci.py [--cache-keys]")
+    else:
+        main()

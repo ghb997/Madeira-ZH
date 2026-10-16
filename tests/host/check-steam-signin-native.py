@@ -93,7 +93,7 @@ require('kSecAttrSynchronizable' not in store, 'Keychain item is not synchronise
 signin_view = (steam / 'SteamSignInView.swift').read_text()
 require('password = ""' in signin_view, 'the password field is cleared after submitting')
 content = (app / 'ContentView.swift').read_text()
-require('Button("Steam sign-in")' in content and 'SteamSignIn.isEnabled' in content, 'developer interface opens the sheet')
+require('Button("登录 Steam")' in content and 'SteamSignIn.isEnabled' in content, 'developer interface opens the sheet')
 
 # ---------------------------------------------------------------- Part B
 signin = (steam / 'SteamSignIn.swift').read_text()
@@ -240,8 +240,8 @@ func expectError(_ expected: SteamError, _ label: String, _ run: () async throws
         require(SteamAuthAPI.error(for: 84) == .rateLimited && SteamAuthAPI.error(for: 87) == .rateLimited, "rate limits")
         require(SteamAuthAPI.error(for: 17) == .accountDisabled, "banned")
         require(SteamAuthAPI.error(for: 9) == .authSessionExpired && SteamAuthAPI.error(for: 27) == .authSessionExpired, "expired session")
-        if case .authenticationFailed(let text) = SteamAuthAPI.error(for: 65) { require(text.contains("Steam Guard"), "wrong code") } else { require(false, "wrong code") }
-        if case .authenticationFailed(let text) = SteamAuthAPI.error(for: 2) { require(text.contains("(code 2)"), "other codes are named") } else { require(false, "other codes are named") }
+        if case .authenticationFailed(let text) = SteamAuthAPI.error(for: 65) { require(text.contains("Steam 令牌"), "wrong code") } else { require(false, "wrong code") }
+        if case .authenticationFailed(let text) = SteamAuthAPI.error(for: 2) { require(text.contains("（代码 2）"), "other codes are named") } else { require(false, "other codes are named") }
 
         // Transport, through a stub protocol.
         _ = URLProtocol.registerClass(StubProtocol.self)
@@ -259,7 +259,7 @@ func expectError(_ expected: SteamError, _ label: String, _ run: () async throws
         StubProtocol.eresult = nil; StubProtocol.status = 429
         await expectError(.rateLimited, "HTTP 429 is a rate limit") { try await SteamAuthAPI.call("X", body: Data()) }
         StubProtocol.status = 503
-        await expectError(.authenticationFailed("Steam sign-in is unavailable right now (HTTP 503)."), "other HTTP errors") { try await SteamAuthAPI.call("X", body: Data()) }
+        await expectError(.authenticationFailed("Steam 登录暂不可用（HTTP 503）。"), "other HTTP errors") { try await SteamAuthAPI.call("X", body: Data()) }
 
         // SteamSignIn: the Dock's view of the stored sign-in.
         func jwt(_ claims: String) -> String {

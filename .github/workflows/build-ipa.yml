@@ -43,9 +43,11 @@ jobs:
           echo "fex=$(git -C FEX rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           echo "wine=$(git -C wine rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           echo "dxmt=$(git -C dxmt rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          python3 tools/build-native-ci.py --cache-keys >> "$GITHUB_OUTPUT"
           find app -name '*.swift' -print0 | while IFS= read -r -d '' f; do
             xcrun swiftc -frontend -parse "$f"
           done
+          python3 tests/host/check-config-catalog.py
 
       - name: 安装构建工具
         run: |
@@ -67,7 +69,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: wine/build-native
-          key: macos15-wine-host-v1-${{ steps.versions.outputs.wine }}
+          key: macos15-wine-host-v1-${{ steps.versions.outputs.wine }}-${{ steps.versions.outputs.wine_recipe }}
 
       - name: 恢复 Wine、字体、加密及媒体库缓存
         id: wine
@@ -83,7 +85,11 @@ jobs:
             app/Madeira/libwin32u_unix.a
             app/Madeira/libav*.a
             app/Madeira/libswresample.a
-          key: macos15-ios${{ steps.versions.outputs.sdk }}-wine-v1-${{ steps.versions.outputs.wine }}-${{ hashFiles('build/ntdll-unix/**', 'build/wineserver/**', 'build/win32u-unix/**', 'build/ffmpeg/**', 'build/crypto-unix/**', 'build/madsync/**', 'build/hidpad/**') }}
+            app/Madeira/libgmp.a
+            app/Madeira/libnettle.a
+            app/Madeira/libhogweed.a
+            app/Madeira/libgnutls.a
+          key: macos15-ios${{ steps.versions.outputs.sdk }}-wine-v1-${{ steps.versions.outputs.wine }}-${{ steps.versions.outputs.wine_recipe }}-${{ hashFiles('build/ntdll-unix/**', 'build/wineserver/**', 'build/win32u-unix/**', 'build/ffmpeg/**', 'build/crypto-unix/**', 'build/madsync/**', 'build/hidpad/**') }}
 
       - name: 构建 Wine 原生库
         if: steps.wine.outputs.cache-hit != 'true'
@@ -110,6 +116,10 @@ jobs:
             app/Madeira/libwin32u_unix.a
             app/Madeira/libav*.a
             app/Madeira/libswresample.a
+            app/Madeira/libgmp.a
+            app/Madeira/libnettle.a
+            app/Madeira/libhogweed.a
+            app/Madeira/libgnutls.a
           key: ${{ steps.wine.outputs.cache-primary-key }}
 
       - name: 恢复 FEX 缓存
@@ -117,7 +127,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: FEX/build-ios
-          key: macos15-ios${{ steps.versions.outputs.sdk }}-fex-v1-${{ steps.versions.outputs.fex }}
+          key: macos15-ios${{ steps.versions.outputs.sdk }}-fex-v1-${{ steps.versions.outputs.fex }}-${{ steps.versions.outputs.fex_recipe }}
       - name: 构建 FEX
         if: steps.fex.outputs.cache-hit != 'true'
         run: bash tools/build-native-ci.sh fex
@@ -136,7 +146,7 @@ jobs:
             toolchains/llvm-project
             toolchains/llvm-ios-build
             toolchains/llvm-host-build
-          key: macos15-ios${{ steps.versions.outputs.sdk }}-llvm-v1-8dfdcc7b7
+          key: macos15-ios${{ steps.versions.outputs.sdk }}-llvm-v1-8dfdcc7b7-${{ steps.versions.outputs.llvm_recipe }}
       - name: 构建 LLVM iOS 静态库
         if: steps.llvm.outputs.cache-hit != 'true'
         run: bash tools/build-native-ci.sh llvm
@@ -155,7 +165,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: app/Madeira/libdxmt_combined.a
-          key: macos15-ios${{ steps.versions.outputs.sdk }}-dxmt-v1-${{ steps.versions.outputs.dxmt }}-${{ hashFiles('build/dxmt-ios/build.sh', 'madeira-d3d12/src/**', 'madeira-d3d12/tests/native/msc_canary.mm') }}
+          key: macos15-ios${{ steps.versions.outputs.sdk }}-dxmt-v1-${{ steps.versions.outputs.dxmt }}-${{ steps.versions.outputs.dxmt_recipe }}-${{ steps.versions.outputs.llvm_recipe }}-${{ hashFiles('build/dxmt-ios/build.sh', 'madeira-d3d12/src/**', 'madeira-d3d12/tests/native/msc_canary.mm') }}
       - name: 构建 DXMT 与 D3D12 原生运行时
         if: steps.dxmt.outputs.cache-hit != 'true'
         run: bash tools/build-native-ci.sh dxmt
@@ -174,7 +184,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: toolchains/llvm-mingw-20260421-ucrt-macos-universal
-          key: macos15-llvm-mingw-20260421-bd85a397
+          key: macos15-llvm-mingw-20260421-bd85a397-${{ steps.versions.outputs.mingw_recipe }}
       - name: 构建 Windows 运行时与 Madeira Dock
         run: bash tools/build-native-ci.sh runtime
       - name: 保存 Windows 交叉编译工具链

@@ -62,7 +62,7 @@ require('open(LibraryModel.shared.steamEntry(installed, title: item.name))' in g
 require(games.count('startDock(') == 0, 'the section never starts Dock itself: Play is on the Game details page')
 # A finished download: the game becomes a library entry, and its sheet's button reads Open (Game details).
 sheet = games[games.index('struct SteamGameSheet: View {'):games.index('struct SteamEntrySection')]
-require('Text("Open")' in sheet and 'if let installed = item.installed {' in sheet and 'dismiss(); open(entry)' in sheet,
+require('Text("打开")' in sheet and 'if let installed = item.installed {' in sheet and 'dismiss(); open(entry)' in sheet,
         "a finished download's sheet offers Open, which opens the Game details page")
 require('SteamGameSheet(appID: selection.id) { entry in' in games and 'open(entry) }' in games,
         'Open presents the Game details page after the download sheet closes')
@@ -76,14 +76,14 @@ detail = library[library.index('struct LibraryDetail: View {'):library.index('st
 steam_section = games[games.index('struct SteamEntrySection'):]
 require('SteamEntrySection(entry: $entry)' in detail and 'if entry.steamAppID != nil {' in detail,
         'Game details: the Steam section for a Steam game')
-for label in ['"Start with"', '"Madeira Dock"', '"Smaller JIT pool (512 MB) for this launch"', '"One-time installs"',
-              '"Run at next start"', '"Skip"', '"Repair installed files"', '"Uninstall"', '"App ID"',
-              '"Free space on this device"', '"Pause update"', '"Resume update"', '"The game"', '"Program"', '"Choose…"']:
+for label in ['"启动方式"', '"Madeira Dock"', '"本次启动使用较小的 JIT 内存池（512 MB）"', '"首次运行组件安装"',
+              '"下次启动时运行"', '"跳过"', '"修复已安装文件"', '"卸载"', '"应用 ID"',
+              '"此设备的可用空间"', '"暂停更新"', '"继续更新"', '"游戏程序"', '"程序"', '"选择…"']:
     require(label in steam_section, f'Steam section: {label}')
-for label in ['"Library details"', '"Choose cover image"', '"Use Steam artwork"', '"Display"', '"Resolution"',
-              '"Aspect & scaling"', '"Compatibility & performance"', '"Reduced-precision x87"', '"CPU cores reported"',
-              '"D3D9 anisotropic filtering"', '"On screen"', '"Performance overlay"', '"Live logs"', '"Touch controls"',
-              '"Control opacity"', '"Control size"', '"Executable"', '"Game details"']:
+for label in ['"游戏库信息"', '"选择封面图片"', '"使用 Steam 封面"', '"显示"', '"分辨率"',
+              '"宽高比与缩放"', '"兼容性与性能"', '"降低 x87 精度"', '"报告的 CPU 核心数"',
+              '"D3D9 各向异性过滤"', '"屏幕显示"', '"性能浮层"', '"实时日志"', '"触屏控制"',
+              '"控件透明度"', '"控件大小"', '"可执行文件"', '"游戏详情"']:
     require(label in detail, f'Game details: {label}')
 require('if entry.desktop != true && entry.steamAppID == nil {' in detail,
         "no Launch arguments for a Steam game: Dock starts Steam's own launch option")
@@ -91,7 +91,7 @@ entries_start = library.index('private var entries: [LibraryEntry] {')
 require('$0.steamAppID == nil' in library[entries_start:library.index('var body: some View {', entries_start)],
         'Steam games are listed in the Steam section only, not also under Games')
 # A card's pills: an installed game shows a library game's (32-bit or 64-bit, graphics API, size), no
-# "Madeira Dock" or "Steam" pill; "Update" joins them; any other state keeps its own pill.
+# "Madeira Dock" or "Steam" pill; "更新" joins them; any other state keeps its own pill.
 cell = games[games.index('struct SteamGameCell: View {'):games.index('/// Progress, speed and the state of one download.')]
 require('@ViewBuilder private func pills(_ status: SteamGamesRules.Status, _ entry: LibraryEntry?) -> some View {' in cell and
         'if status.showsFormat, let entry {\n            LibraryBadges(entry: entry, note: status.badge)' in cell and
@@ -101,7 +101,7 @@ require('@ViewBuilder private func pills(_ status: SteamGamesRules.Status, _ ent
         "an installed game's card shows the library pills (and Update), any other state its own pill, in all three "
         "layouts (dense list, list, grid); no Dock or Steam pill")
 badges = library[library.index('struct LibraryBadges: View {'):library.index('struct LibraryStatus: View {')]
-require(badges.index('badge("\\(entry.bits)-bit")') < badges.index('LibraryRendererBadge.compact(entry.graphicsAPI)') <
+require(badges.index('badge("\\(entry.bits) 位")') < badges.index('LibraryRendererBadge.compact(entry.graphicsAPI)') <
         badges.index('if let note { badge(note) }') < badges.index('private var size'),
         'the pills in order: bits, graphics API, Update, then the size')
 require('await library.refreshSteamMetadata(game, title: item.name)' in cell and 'if status.showsFormat, let game = item.installed' in cell,
@@ -120,7 +120,7 @@ require('stored?.steamProgramSource == "choice" ? stored?.steamProgram : nil' in
         'SteamDirectStart.program(picked: kept, options: options, installFolder: root)' in steam_meta and
         'LibraryModel.inspect(root.appendingPathComponent(path))' in steam_meta and
         'LibraryMetadataScanner.shared.scan(program.url, drive: drive, countBytes: false)' in steam_meta,
-        'the program is the one "The game" starts; bits from its PE header, the API as for any library game')
+        'the program is the one "游戏程序" starts; bits from its PE header, the API as for any library game')
 require(steam_meta.count('Task.detached(priority: .utility)') == 3 and 'updated.folderBytes = record.size ?? updated.folderBytes' in steam_meta
         and 'guard !Task.isCancelled else { return }' in steam_meta and 'save(updated)' in steam_meta,
         "file reads off the main thread; the size is the install record's; the result is kept on the game's entry")
@@ -140,9 +140,9 @@ direct = launch[launch.index('if let appID = entry.steamAppID, !entry.startsStea
 require(direct.index('startDock(') < direct.index('guard entry.steamProgram?.isEmpty == false else {') <
         direct.index('LibraryModel.executable(entry.launchRelativePath)') < direct.index('entry.configureLaunch()') <
         direct.index('runWineFullSequence(profile: entry)'),
-        '"The game": no program chosen, no start; otherwise the program is checked inside drive_c and started as a library game')
+        '"游戏程序": no program chosen, no start; otherwise the program is checked inside drive_c and started as a library game')
 require('writeHandoff' not in direct[direct.index('guard entry.steamProgram'):] and 'credentialsForDock' not in launch,
-        '"The game" hands no sign-in to anything')
+        '"游戏程序" hands no sign-in to anything')
 dock_start = content_view[content_view.index('private func startDock('):]
 dock_start = dock_start[:dock_start.index('\n    }\n') + 6]
 require('if let profile { library.begin(profile, dock: game) }' in dock_start and 'runWineFullSequence(profile: profile)' in dock_start,
@@ -290,13 +290,13 @@ func record(_ appID: Int, _ name: String, _ folder: String, flags: Int) -> Strin
         require(R.status(installed: ready, transfer: nil, updateAvailable: false) == .installed, "installed")
         require(R.status(installed: ready, transfer: nil, updateAvailable: true) == .updateAvailable, "installed with a newer build")
         require(R.status(installed: ready, transfer: .active(percent: 250), updateAvailable: true) == .downloading(100), "a download wins over the record; percent is clamped")
-        require(R.status(installed: nil, transfer: .paused, updateAvailable: false).badge == "Paused", "paused pill")
-        require(R.status(installed: nil, transfer: .queued, updateAvailable: false).badge == "Waiting", "queued pill")
+        require(R.status(installed: nil, transfer: .paused, updateAvailable: false).badge == "已暂停", "paused pill")
+        require(R.status(installed: nil, transfer: .queued, updateAvailable: false).badge == "等待中", "queued pill")
         require(R.status(installed: nil, transfer: .failed, updateAvailable: false) == .failed, "failed")
-        require(R.status(installed: nil, transfer: .active(percent: 42), updateAvailable: false).badge == "Downloading 42%", "progress pill")
+        require(R.status(installed: nil, transfer: .active(percent: 42), updateAvailable: false).badge == "正在下载 42%", "progress pill")
         // A card's pills: an installed game shows a library game's (bits, graphics API, size), no state pill.
         let states: [R.Status] = [.notInstalled, .partlyInstalled, .installed, .updateAvailable, .queued, .downloading(42), .paused, .failed]
-        require(states.map(\.badge) == ["Not installed", "Not fully installed", nil, "Update", "Waiting", "Downloading 42%", "Paused", "Download failed"],
+        require(states.map(\.badge) == ["未安装", "尚未安装完成", nil, "更新", "等待中", "正在下载 42%", "已暂停", "下载失败"],
                 "card pills: none for an installed game (no \"Madeira Dock\" or \"Steam\"), \"Update\" for a newer build, the other states unchanged")
         require(states.filter(\.showsFormat) == [.installed, .updateAvailable],
                 "only an installed game (with or without a newer build) shows the library pills")
@@ -328,10 +328,10 @@ func record(_ appID: Int, _ name: String, _ folder: String, flags: Int) -> Strin
                 "the owned game carries the PICS build and install folder")
 
         require(R.blocker(installed: true, client: true, signedIn: true) == nil, "Play offered when installed, client ready, signed in")
-        require(R.blocker(installed: false, client: true, signedIn: true)?.contains("fully installed") == true, "not installed first")
-        require(R.blocker(installed: true, client: false, signedIn: true)?.contains("client components") == true, "client components next")
-        require(R.blocker(installed: true, client: true, signedIn: false)?.contains("Sign in") == true, "sign-in last")
-        require(R.blocker(installed: true, client: true, signedIn: true, updating: true)?.contains("downloaded") == true,
+        require(R.blocker(installed: false, client: true, signedIn: true)?.contains("安装完成") == true, "not installed first")
+        require(R.blocker(installed: true, client: false, signedIn: true)?.contains("客户端组件") == true, "client components next")
+        require(R.blocker(installed: true, client: true, signedIn: false)?.contains("登录") == true, "sign-in last")
+        require(R.blocker(installed: true, client: true, signedIn: true, updating: true)?.contains("正在下载") == true,
                 "no Play while the game is being downloaded")
 
         let cover = R.cover(4242)
@@ -430,7 +430,7 @@ func record(_ appID: Int, _ name: String, _ folder: String, flags: Int) -> Strin
         let programs = D.programs(in: install)
         require(programs == ["beta/game.exe", "server/srv.exe", "tools/launcher.exe"],
                 "the Program picker lists the folder's .exe files, sorted, not through linked folders or deeper than six: \(programs)")
-        // The card's bits and graphics API describe the program "The game" would start.
+        // The card's bits and graphics API describe the program "游戏程序" would start.
         require(D.program(picked: "SERVER/srv.EXE", options: options, installFolder: install) == "server/srv.exe",
                 "pills: the user's picked program first, spelt as on disk")
         require(D.program(picked: "gone.exe", options: options, installFolder: install) == "tools/launcher.exe" &&
@@ -446,9 +446,9 @@ func record(_ appID: Int, _ name: String, _ folder: String, flags: Int) -> Strin
         require(D.program(picked: nil, options: nil, installFolder: single) == "bin/only.exe", "pills: else the install folder's only program")
         require(D.program(picked: "../Direct/tools/launcher.exe", options: nil, installFolder: single) == "bin/only.exe",
                 "pills: a picked program never leaves the install folder")
-        require(D.blocker(installed: false, program: "a.exe")?.contains("fully installed") == true &&
-                D.blocker(installed: true, program: "a.exe", updating: true)?.contains("downloaded") == true &&
-                D.blocker(installed: true, program: nil)?.contains("Program") == true &&
+        require(D.blocker(installed: false, program: "a.exe")?.contains("安装完成") == true &&
+                D.blocker(installed: true, program: "a.exe", updating: true)?.contains("正在下载") == true &&
+                D.blocker(installed: true, program: nil)?.contains("程序") == true &&
                 D.blocker(installed: true, program: "") != nil && D.blocker(installed: true, program: "a.exe") == nil,
                 "Play for \"The game\": installed, not updating, a program chosen; no client or sign-in needed")
         if failures > 0 { print("FAILURES: \(failures)"); exit(1) }
