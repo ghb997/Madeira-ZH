@@ -89,7 +89,7 @@ actor CMServerList {
     private func fetchServerList() async throws -> [CMServer] {
         let urlString = "https://api.steampowered.com/ISteamDirectory/GetCMListForConnect/v1/?cellid=0&cmtype=websockets"
         guard let url = URL(string: urlString) else {
-            throw SteamError.connectionFailed("Invalid CM directory URL")
+            throw SteamError.connectionFailed("无效的 CM 服务器目录地址")
         }
 
         let (data, response) = try await URLSession.shared.data(from: url)
@@ -100,14 +100,14 @@ actor CMServerList {
                 SteamLog.trace("CM directory unavailable, using cached servers")
                 return cached
             }
-            throw SteamError.connectionFailed("CM directory returned non-200 status")
+            throw SteamError.connectionFailed("CM 服务器目录返回非 200 状态码")
         }
 
         // Response format: { "response": { "serverlist": [ { "endpoint": "host:port", ... }, ... ] } }
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let serverResponse = json["response"] as? [String: Any],
               let serverList = serverResponse["serverlist"] as? [[String: Any]] else {
-            throw SteamError.connectionFailed("Invalid CM directory response format")
+            throw SteamError.connectionFailed("CM 服务器目录响应格式无效")
         }
 
         // Each entry has an "endpoint" field: "hostname:port"

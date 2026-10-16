@@ -35,10 +35,10 @@ enum SteamRuntimeFiles {
         case invalidPackage, conflict, activeSession, prefixMissing
         var errorDescription: String? {
             switch self {
-            case .invalidPackage: return "Steam's components could not be verified. Try downloading them again."
-            case .conflict: return "Existing Steam files need attention. They were kept. Use the desktop setup option."
-            case .activeSession: return "Close the running session before preparing Steam's components."
-            case .prefixMissing: return "Madeira could not prepare its Windows environment."
+            case .invalidPackage: return "无法验证 Steam 组件。请重新下载。"
+            case .conflict: return "现有 Steam 文件需要处理，文件已保留。请使用桌面安装选项。"
+            case .activeSession: return "请先关闭正在运行的会话，再准备 Steam 组件。"
+            case .prefixMissing: return "Madeira 无法准备 Windows 环境。"
             }
         }
     }
@@ -226,7 +226,7 @@ actor SteamRuntimeInstaller {
         var names = Set<String>(), files: [String] = []
         for (index, package) in SteamRuntimeFiles.packages.enumerated() {
             try Task.checkCancellation()
-            await progress("Downloading Steam components (\(index + 1) of \(SteamRuntimeFiles.packages.count))…")
+            await progress("正在下载 Steam 组件（\(index + 1)/\(SteamRuntimeFiles.packages.count)）…")
             let url = URL(string: SteamRuntimeFiles.origin + package.file)!
             let (temporary, response) = try await session.download(from: url)
             defer { try? fm.removeItem(at: temporary) }
@@ -237,7 +237,7 @@ actor SteamRuntimeInstaller {
             }
             let archive = try Data(contentsOf: temporary, options: .mappedIfSafe)
             guard Self.hash(archive) == package.sha256 else { throw SteamRuntimeFiles.Failure.invalidPackage }
-            await progress("Verifying Steam components…")
+            await progress("正在验证 Steam 组件…")
             try SteamRuntimeFiles.unpack(archive) { name, bytes in
                 guard names.insert(name.lowercased()).inserted else { throw SteamRuntimeFiles.Failure.invalidPackage }
                 let file = stage.appendingPathComponent(name)
@@ -250,7 +250,7 @@ actor SteamRuntimeInstaller {
               files.contains("steam.exe") else { throw SteamRuntimeFiles.Failure.invalidPackage }
         try Task.checkCancellation()
         guard wine_process_is_running() == 0, wineserver_is_running() == 0 else { throw SteamRuntimeFiles.Failure.activeSession }
-        await progress("Preparing the Windows environment…")
+        await progress("正在准备 Windows 环境…")
         try Task.checkCancellation()
         guard wine_process_is_running() == 0, wineserver_is_running() == 0 else { throw SteamRuntimeFiles.Failure.activeSession }
         madeira_seed_prefix_if_needed(prefix.path)
@@ -285,7 +285,7 @@ actor SteamRuntimeInstaller {
             try fm.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
             try fm.moveItem(at: stage.appendingPathComponent(name), to: target)
         }
-        await progress("Steam components are ready.")
+        await progress("Steam 组件已就绪。")
     }
 
     private static func hash(_ data: Data) -> String { SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined() }

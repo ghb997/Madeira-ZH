@@ -517,7 +517,7 @@ enum DockReset {
         let systemFile = prefix.appendingPathComponent("system.reg")
         let userFile = prefix.appendingPathComponent("user.reg")
         guard let systemData = try? Data(contentsOf: systemFile), !systemData.isEmpty else {
-            summary.failures.append("system.reg could not be read"); return summary
+            summary.failures.append("无法读取 system.reg"); return summary
         }
         // The registry files as they were, before anything changes.
         do {
@@ -526,7 +526,7 @@ enum DockReset {
                 try fm.copyItem(at: file, to: backup.appendingPathComponent(file.lastPathComponent))
             }
         } catch {
-            summary.failures.append("backup: " + error.localizedDescription); return summary
+            summary.failures.append("备份：" + error.localizedDescription); return summary
         }
 
         var system = RegText(String(decoding: systemData, as: UTF8.self))
@@ -565,13 +565,13 @@ enum DockReset {
             }
         }
 
-        var list = ["Madeira Dock reset of app \(appID), " + name, "",
-                    "Moved here from drive_c (put a folder back to undo):"]
+        var list = ["Madeira Dock 重置应用 \(appID)，" + name, "",
+                    "从 drive_c 移至此处（将文件夹移回即可撤销）："]
         list += summary.moved.map { "  " + $0 }
-        list += ["", "Uninstall entries removed from system.reg:"] + summary.entries.map { "  " + $0 }
-        list += ["", "Registry: \(summary.keys) keys and \(summary.values) values removed, \(summary.restored) keys set back to a new prefix's values.",
-                 "system.reg and user.reg here are the files as they were before the reset."]
-        if !summary.failures.isEmpty { list += ["", "Failed:"] + summary.failures.map { "  " + $0 } }
+        list += ["", "从 system.reg 移除的卸载条目："] + summary.entries.map { "  " + $0 }
+        list += ["", "注册表：已移除 \(summary.keys) 个键和 \(summary.values) 个值，已将 \(summary.restored) 个键恢复为新建 Wine 环境的值。",
+                 "这里的 system.reg 和 user.reg 是重置前的原始文件。"]
+        if !summary.failures.isEmpty { list += ["", "失败："] + summary.failures.map { "  " + $0 } }
         try? Data((list.joined(separator: "\n") + "\n").utf8).write(to: backup.appendingPathComponent("reset.txt"))
         return summary
     }

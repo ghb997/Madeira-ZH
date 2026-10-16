@@ -1263,7 +1263,7 @@ struct ContentView: View {
     /// replaces both bodies below, and a running library session gets the
     /// full-screen `sessionBody`.
     @ObservedObject private var library = LibraryModel.shared
-    /// "Use New Interface" (actionButtons) applies at the next start.
+    /// "使用新界面" (actionButtons) applies at the next start.
     @State private var showFrontendRestart = false
 
     enum JITStatus {
@@ -1303,40 +1303,40 @@ struct ContentView: View {
             // progressive blur (as in the App Store), with no hard edge.
             .toolbarBackground(library.enabled && !Self.systemScrollEdge ? .visible : .automatic, for: .navigationBar)
             // A second session cannot start in this process; offer to close Madeira.
-            .alert("Restart Madeira", isPresented: Binding(get: { library.restartNotice != nil },
+            .alert("重启 Madeira", isPresented: Binding(get: { library.restartNotice != nil },
                                                             set: { if !$0 { library.restartNotice = nil } })) {
-                Button("Close Madeira") {
+                Button("关闭 Madeira") {
                     LogStore.shared.log("[session-once] closed by the user for a restart")
                     exit(0)
                 }
-                Button("Later", role: .cancel) { library.restartNotice = nil }
+                Button("稍后", role: .cancel) { library.restartNotice = nil }
             } message: { Text(library.restartNotice ?? "") }
             // CS_DEBUGGED without a debugger (JIT enabled outside Madeira): offer Madeira's own request.
-            .alert("Enable JIT", isPresented: Binding(get: { library.jitNotice != nil },
+            .alert("启用 JIT", isPresented: Binding(get: { library.jitNotice != nil },
                                                       set: { if !$0 { library.jitNotice = nil } })) {
-                Button("Enable JIT") { library.jitNotice = nil; enableJIT() }
-                Button("Later", role: .cancel) { library.jitNotice = nil }
+                Button("启用 JIT") { library.jitNotice = nil; enableJIT() }
+                Button("稍后", role: .cancel) { library.jitNotice = nil }
             } message: { Text(library.jitNotice ?? "") }
             .sheet(isPresented: $jitCoordinator.showSetup) { JITSetupView() }
             // A Steam game's saves may not be the latest (cloudClear).
-            .alert(library.cloudNotice?.title ?? "Steam Cloud", isPresented: Binding(get: { library.cloudNotice != nil },
+            .alert(library.cloudNotice?.title ?? "Steam 云存档", isPresented: Binding(get: { library.cloudNotice != nil },
                                                                                      set: { if !$0 { library.cloudNotice = nil } })) {
                 if let notice = library.cloudNotice {
                     switch notice.kind {
-                    case .syncing: Button("Wait and sync") { library.cloudNotice = nil; cloudWait(notice.appID) }
-                    case .unchecked: Button("Try again") { library.cloudNotice = nil; cloudWait(notice.appID) }
+                    case .syncing: Button("等待并同步") { library.cloudNotice = nil; cloudWait(notice.appID) }
+                    case .unchecked: Button("重试") { library.cloudNotice = nil; cloudWait(notice.appID) }
                     case .conflict:
-                        Button("Choose") {
+                        Button("选择") {
                             library.cloudNotice = nil; library.cloudRetry = nil
                             library.showDetail = library.entries.first { $0.steamAppID == notice.appID }?.id
                         }
                     }
-                    Button("Launch anyway") {
+                    Button("仍然启动") {
                         LogStore.shared.log("[steam-cloud] app=\(notice.appID) before-play: launched anyway")
                         library.cloudNotice = nil; library.cloudBypass = notice.appID
                         let retry = library.cloudRetry; library.cloudRetry = nil; retry?()
                     }
-                    Button("Cancel", role: .cancel) { library.cloudNotice = nil; library.cloudRetry = nil }
+                    Button("取消", role: .cancel) { library.cloudNotice = nil; library.cloudRetry = nil }
                 }
             } message: { Text(library.cloudNotice?.message ?? "") }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
@@ -1571,7 +1571,7 @@ struct ContentView: View {
             else { input.relative.toggle() }
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
         } label: {
-            Text(input.touchMode ? "Touch" : input.relative ? "Relative" : "Absolute")
+            Text(input.touchMode ? "触控" : input.relative ? "相对模式" : "绝对模式")
                 .font(.system(size: 13, weight: .semibold))
                 .frame(minWidth: 82, minHeight: 32)
                 .background((input.relative ? Color.accentColor : Color.secondary).opacity(0.28))
@@ -1617,7 +1617,7 @@ struct ContentView: View {
             // Device model rides in this row (the old standalone statusHeader
             // row above it spent ~50pt of vertical space on nothing else).
             VStack(alignment: .trailing, spacing: 0) {
-                Text("Device")
+                Text("设备")
                     .font(.caption2)
                     .foregroundColor(.secondary)
                 Text(deviceInfo)
@@ -1675,21 +1675,21 @@ struct ContentView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
                 if SteamSignIn.isEnabled {
-                    Button("Steam sign-in") { devSheet = .steamSignIn }
+                    Button("登录 Steam") { devSheet = .steamSignIn }
                         .buttonStyle(.bordered)
                 }
                 if MadeiraDock.enabled {
                     Button("Madeira Dock") { devSheet = .dock }
                         .buttonStyle(.bordered)
                 }
-                Button("All settings") { devSheet = .allSettings }
+                Button("全部设置") { devSheet = .allSettings }
                     .buttonStyle(.bordered)
-                Button("Enable JIT") {
+                Button("启用 JIT") {
                     enableJIT()
                 }
                 .buttonStyle(.borderedProminent)
 
-                Button("Steam Testing") {
+                Button("Steam 测试") {
                     // Steam S3 first boot: virtual desktop (Steam needs a
                     // window manager) + services.exe (SCM → rpcss for Steam's
                     // COM, the chain proven in the rpcss milestone) + steam.exe
@@ -1960,7 +1960,7 @@ struct ContentView: View {
 
                 resolutionPicker
 
-                Button("Wine Virtual Desktop") {
+                Button("Wine 虚拟桌面") {
                     // S3-pre R2v2: raw rpcss.exe CANNOT run standalone —
                     // its wmain unconditionally StartServiceCtrlDispatcherW's
                     // (rpcss_main.c:282), which RPCs back to the SCM; without
@@ -2052,7 +2052,7 @@ struct ContentView: View {
                 .buttonStyle(.borderedProminent)
                 .tint(.mint)
 
-                Button("Thumper (standalone)") {
+                Button("Thumper（独立版）") {
                     // Game lives at Documents/wine/drive_c/Program Files/Thumper/
                     // (copied into the prefix by hand during development).
                     setenv("MADEIRA_EXE",
@@ -2064,7 +2064,7 @@ struct ContentView: View {
                 .buttonStyle(.borderedProminent)
                 .tint(.pink)
 
-                Button("x64 DX11 cube") {
+                Button("x64 DX11 立方体") {
                     setenv("MADEIRA_EXE", "cube-x64.exe", 1)
                     unsetenv("MADEIRA_ARGS")
                     runWineFullSequence()
@@ -2082,7 +2082,7 @@ struct ContentView: View {
                 // cube through our D3D12 interfaces and presenting into the
                 // host window. Shaders are still matched fixtures rather than
                 // runtime-converted DXIL, which the window title states.
-                Button("D3D12 cube") {
+                Button("D3D12 立方体") {
                     setenv("MADEIRA_EXE", "d3d12-cube-x64.exe", 1)
                     unsetenv("MADEIRA_ARGS")
                     runWineFullSequence()
@@ -2106,7 +2106,7 @@ struct ContentView: View {
                 // and the game is too unstable to serve as a measuring tool.
                 // Each clock is checked separately so a partial failure names
                 // itself: QPC passing alone is the shared-page signature.
-                Button("x64 clock test") {
+                Button("x64 时钟测试") {
                     setenv("MADEIRA_EXE", "clocktest-x64.exe", 1)
                     unsetenv("MADEIRA_ARGS")
                     unsetenv("MADEIRA_DESKTOP")
@@ -2119,7 +2119,7 @@ struct ContentView: View {
                 // live in (GetLastError, QPC, SetEvent, critical sections, heap,
                 // event ping-pong, contended sections). Results in the log and in
                 // C:\calltest.txt.
-                Button("x64 call cost") {
+                Button("x64 调用开销") {
                     setenv("MADEIRA_EXE", "calltest-x64.exe", 1)
                     unsetenv("MADEIRA_ARGS")
                     unsetenv("MADEIRA_DESKTOP")
@@ -2128,20 +2128,20 @@ struct ContentView: View {
                 .buttonStyle(.borderedProminent)
                 .tint(.teal)
 
-                Button("arm64 DX11 cube") {
+                Button("arm64 DX11 立方体") {
                     runTriangleTest()
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.blue)
 
-                Button("Clear Log") {
+                Button("清空日志") {
                     logStore.clear()
                 }
                 .buttonStyle(.bordered)
                 .tint(.red)
 
                 // Back to the library interface (FrontendChoice), at the next start.
-                Button("Use New Interface") {
+                Button("使用新界面") {
                     FrontendChoice.choose(new: true)
                     showFrontendRestart = true
                 }
@@ -2150,10 +2150,10 @@ struct ContentView: View {
             }
             .padding()
         }
-        .alert("Restart Madeira", isPresented: $showFrontendRestart) {
-            Button("OK", role: .cancel) {}
+        .alert("重启 Madeira", isPresented: $showFrontendRestart) {
+            Button("好", role: .cancel) {}
         } message: {
-            Text("Close Madeira from the app switcher and open it again to use the new interface.")
+            Text("请从应用切换器关闭 Madeira，然后重新打开以使用新界面。")
         }
         // One sheet for the strip, not one per button: a sheet attached to a
         // button closed again whenever this often-redrawn screen rebuilt it.
@@ -2244,11 +2244,11 @@ struct ContentView: View {
 
     private var statusText: String {
         switch jitStatus {
-        case .unknown: return "Not tested"
-        case .testing: return "Testing..."
-        case .available: return "Available"
-        case .mappingOnly: return "Needs debugger"
-        case .unavailable: return "Unavailable"
+        case .unknown: return "尚未测试"
+        case .testing: return "正在测试…"
+        case .available: return "可用"
+        case .mappingOnly: return "需要调试器"
+        case .unavailable: return "不可用"
         }
     }
 
@@ -2414,7 +2414,7 @@ struct ContentView: View {
         guard started, StikJITHelper.ready, library.current == nil, wine_process_is_running() == 0 else {
             logStore.log("[jit-on-play] JIT did not come on: the game was not started")
             // A failure has its own error; this one closes the details page as well.
-            if started, library.current == nil { library.error = "JIT is on, but the game could not start. Tap Play again." }
+            if started, library.current == nil { library.error = "JIT 已启用，但游戏未能启动。请再次轻点“开始游戏”。" }
             return
         }
         logStore.log("[jit-on-play] JIT is on: starting the game")
@@ -2442,7 +2442,7 @@ struct ContentView: View {
             if inLibrary { library.jitNotice = StikJITHelper.noDebuggerMessage }
         } else {
             logStore.log("JIT not enabled. Press 'Enable JIT' first.", level: .error)
-            if inLibrary { library.error = "Enable JIT before playing." }
+            if inLibrary { library.error = "请先启用 JIT，再开始游戏。" }
         }
         return false
     }
@@ -2465,22 +2465,22 @@ struct ContentView: View {
     private func cloudNotice(_ appID: Int, name: String, hold: SteamOwnedLibrary.CloudHold) -> LibraryModel.CloudNotice {
         switch hold {
         case .syncing, .stale:
-            return .init(appID: appID, kind: .syncing, title: "Steam Cloud is still syncing",
-                         message: "\(name)'s saves are still being checked or downloaded. Starting now may leave you on older saves.")
+            return .init(appID: appID, kind: .syncing, title: "Steam 云存档仍在同步",
+                         message: "正在检查或下载《\(name)》的存档。现在启动可能会使用旧存档。")
         case .unchecked(let why):
-            return .init(appID: appID, kind: .unchecked, title: "Steam Cloud could not be checked",
-                         message: "Madeira does not know whether \(name)'s saves on this device are the latest."
-                            + (why.map { " (\($0))" } ?? "") + " If another device has newer saves, starting now means choosing between them later.")
+            return .init(appID: appID, kind: .unchecked, title: "无法检查 Steam 云存档",
+                         message: "Madeira 无法确定本机上《\(name)》的存档是否为最新版本。"
+                            + (why.map { " (\($0))" } ?? "") + " 如果其他设备上有更新的存档，现在启动后，稍后需要选择保留哪个版本。")
         case .conflict(let count):
-            return .init(appID: appID, kind: .conflict, title: "Saves differ from Steam Cloud",
-                         message: "\(count) of \(name)'s save\(count == 1 ? "" : "s") differ\(count == 1 ? "s" : "") between this device and Steam Cloud. Choose which to keep on the game's page, or start with this device's saves.")
+            return .init(appID: appID, kind: .conflict, title: "本机存档与 Steam 云存档不同",
+                         message: "《\(name)》有 \(count) 个存档在本机与 Steam 云端之间存在差异。请在游戏页面选择保留哪个版本，或使用本机存档启动。")
         }
     }
 
     /// Syncs the game's saves, then starts it; if the saves are still not settled, asks again.
     private func cloudWait(_ appID: Int) {
         guard SteamOwnedLibrary.shared.cloudWaitingFor == nil else { return }
-        let name = MadeiraDock.games(drive: MadeiraDock.drive).first { $0.id == appID }?.name ?? "This game"
+        let name = MadeiraDock.games(drive: MadeiraDock.drive).first { $0.id == appID }?.name ?? "此游戏"
         Task { @MainActor in
             let hold = await SteamOwnedLibrary.shared.settleCloud(appID)
             if let hold {
@@ -2508,7 +2508,7 @@ struct ContentView: View {
             launchLibraryEntry(entry); return
         }
         LogStore.shared.log("[shortcut] \(exe) is not in the library: not started", level: .error)
-        library.error = "This shortcut's game is not in the library. Add it to the library, then use the shortcut again."
+        library.error = "此快捷方式对应的游戏不在游戏库中。请先将游戏添加到游戏库，再使用快捷方式。"
     }
 
     /// Play in the library (Library.swift): checks that a session can start,
@@ -2525,7 +2525,7 @@ struct ContentView: View {
         // any library game (SteamDirectStart).
         if let appID = entry.steamAppID, !entry.startsSteamGameDirectly {
             guard let game = MadeiraDock.games(drive: MadeiraDock.drive).first(where: { $0.id == appID }) else {
-                library.error = "Steam no longer lists this game as installed. Refresh the library and try again."; return
+                library.error = "Steam 已不再将此游戏列为已安装。请刷新游戏库后重试。"; return
             }
             LogStore.shared.log("[steam-games] play app=\(appID)")
             // madeira-bcd: the game's own options (AVX, NVIDIA, Wine's C++ runtime, its
@@ -2537,13 +2537,13 @@ struct ContentView: View {
         if let appID = entry.steamAppID {
             guard cloudClear(appID, name: entry.title, retry: { launchLibraryEntry(entry) }) else { return }
             guard entry.steamProgram?.isEmpty == false else {
-                library.error = "Choose the program to start in Game details › Steam › Program."; return
+                library.error = "请在“游戏详情 › Steam › 程序”中选择要启动的程序。"; return
             }
             LogStore.shared.log("[steam-start] app=\(appID) direct source=\(entry.steamProgramSource ?? "-") " +
                                 "args=\(entry.launchArguments.isEmpty ? 0 : 1) folder=\(entry.steamWorkingWindowsPath == nil ? "program" : "steam")")
         }
         guard wine_process_is_running() == 0, wineserver_is_running() == 0, library.current == nil else {
-            library.error = "A session is already running."; return
+            library.error = "已有会话正在运行。"; return
         }
         // One Wine session per app run (see LibraryModel.sessionsThisRun).
         if LibraryModel.sessionsThisRun > 0, MadeiraConfig.flag("MADEIRA_ONE_SESSION_PER_RUN") {
@@ -2568,7 +2568,7 @@ struct ContentView: View {
         // launchArguments carries the whole ml1163 command (explorer's /desktop=, the quoted
         // program, its arguments); validate() and the bridge's tokenizer take 4 KB.
         guard entry.launchWindowsPath.utf8.count < 1024, entry.launchArguments.utf8.count < 4096 else {
-            library.error = "The executable path or launch arguments are too long."; return
+            library.error = "可执行文件路径或启动参数过长。"; return
         }
         entry.configureLaunch()
         // madeira-bcd: the game's own options (LibraryBCD.swift).
@@ -3364,7 +3364,7 @@ struct ContentView: View {
         guard cloudClear(game.id, name: game.name, retry: { startDock(game, compactPool: compactPool, profile: profile) }) else { return }
         guard wine_process_is_running() == 0, wineserver_is_running() == 0, !inLibrary || library.current == nil else {
             logStore.log("[madeira-dock] a session already ran in this app run; restart Madeira first", level: .error)
-            if inLibrary { library.error = "A session is already running." }
+            if inLibrary { library.error = "已有会话正在运行。" }
             return
         }
         if inLibrary, LibraryModel.sessionsThisRun > 0, MadeiraConfig.flag("MADEIRA_ONE_SESSION_PER_RUN") {
@@ -3382,7 +3382,7 @@ struct ContentView: View {
         do {
             try MadeiraDock.validate(game, drive: MadeiraDock.drive)
             try profile?.validate()
-            guard SteamSignIn.isSignedIn else { throw DockError.message("Sign in to Steam in Madeira before starting Dock.") }
+            guard SteamSignIn.isSignedIn else { throw DockError.message("请先在 Madeira 中登录 Steam，再启动 Dock。") }
         } catch { fail(error); return }
         // Only one sign-in of the account may be online: the app's own Steam connection
         // (library, playtime, downloads) logs off and its socket closes before the sign-in
@@ -3404,10 +3404,10 @@ struct ContentView: View {
                 // The launch state may have changed while the connection closed.
                 guard StikJITHelper.ready, wine_process_is_running() == 0, wineserver_is_running() == 0,
                       !inLibrary || library.current == nil else {
-                    throw DockError.message("The launch state changed. Enable JIT and try again.")
+                    throw DockError.message("启动状态已改变。请启用 JIT 后重试。")
                 }
                 guard let signIn = SteamSignIn.credentialsForDock() else {
-                    throw DockError.message("Sign in to Steam in Madeira before starting Dock.")
+                    throw DockError.message("请先在 Madeira 中登录 Steam，再启动 Dock。")
                 }
                 try MadeiraDock.writeHandoff(account: signIn.accountName, token: signIn.refreshToken, appID: game.id)
             } catch { fail(error); return }
@@ -3562,7 +3562,7 @@ struct ContentView: View {
             }
             if let custom { pick(custom) }
         } label: {
-            Label("\(cw)×\(ch)" + (pending ? " · next launch" : ""), systemImage: "rectangle.dashed")
+            Label("\(cw)×\(ch)" + (pending ? " · 下次启动生效" : ""), systemImage: "rectangle.dashed")
         }
         .buttonStyle(.bordered)
     }
@@ -3664,43 +3664,43 @@ struct SetupGuideView: View {
     var body: some View {
         NavigationStack {   /* ml658: see the note on the main body */
             List {
-                Section("Requirements") {
+                Section("运行要求") {
                     guideRow(
                         icon: "cpu",
-                        title: "JIT Compilation",
-                        detail: "Required for x86 code translation. On iOS 26, StikDebug must stay attached — assign the 'universal' or 'MeloNX' JIT script to Madeira in StikDebug."
+                        title: "JIT 即时编译",
+                        detail: "用于翻译 x86 代码。在 iOS 26 上，StikDebug 必须保持连接；请在 StikDebug 中为 Madeira 指定 universal 或 MeloNX JIT 脚本。"
                     )
                     guideRow(
                         icon: "memorychip",
-                        title: "Increased Memory Limit",
-                        detail: "Raises the Jetsam memory threshold. Included in the app entitlements. If not detected, use GetMoreRam to inject it."
+                        title: "提高内存上限",
+                        detail: "提高系统终止应用的内存阈值（Jetsam）。应用已声明此权限；若未检测到，请使用 GetMoreRam 注入。"
                     )
                     guideRow(
                         icon: "arrow.up.left.and.arrow.down.right",
-                        title: "Extended Virtual Addressing",
-                        detail: "Expands virtual address space to ~64GB. Required for large games. Must be injected via GetMoreRam (free accounts can't provision this)."
+                        title: "扩展虚拟地址空间",
+                        detail: "将虚拟地址空间扩展至约 64 GB，运行大型游戏需要此权限。必须通过 GetMoreRam 注入（免费账户无法直接配置）。"
                     )
                 }
 
-                Section("Setup Steps") {
-                    stepRow(number: 1, text: "Install Madeira via SideStore or Xcode")
-                    stepRow(number: 2, text: "Install GetMoreRam and run it to inject memory entitlements into your App ID")
-                    stepRow(number: 3, text: "Reinstall Madeira with the same IPA to apply injected entitlements")
-                    stepRow(number: 4, text: "In StikDebug, assign the 'universal' JIT script to Madeira and launch it")
-                    stepRow(number: 5, text: "Launch Madeira and tap 'Test JIT' to verify")
+                Section("设置步骤") {
+                    stepRow(number: 1, text: "通过 SideStore 或 Xcode 安装 Madeira")
+                    stepRow(number: 2, text: "安装并运行 GetMoreRam，为你的 App ID 注入内存权限")
+                    stepRow(number: 3, text: "使用同一个 IPA 重新安装 Madeira，使注入的权限生效")
+                    stepRow(number: 4, text: "在 StikDebug 中为 Madeira 指定 universal JIT 脚本并启动")
+                    stepRow(number: 5, text: "启动 Madeira，轻点“测试 JIT”进行验证")
                 }
 
-                Section("About") {
-                    Text("Madeira is a proof-of-concept for running x86 Windows games on iOS using FEX-Emu, Wine, and Metal-based graphics translation.")
+                Section("关于") {
+                    Text("Madeira 是一款实验性应用，通过 FEX-Emu、Wine 和基于 Metal 的图形转换，在 iOS 上运行 x86 Windows 游戏。")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
             }
-            .navigationTitle("Setup Guide")
+            .navigationTitle("设置指南")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") { dismiss() }
+                    Button("完成") { dismiss() }
                 }
             }
         }
@@ -3814,8 +3814,8 @@ enum ControlAction: Codable, Equatable, Hashable {
     /// layout stores; the buttons themselves read START/SELECT.
     var padFaceLabel: String {
         switch padName {
-        case "Menu": return "START"
-        case "View": return "SELECT"
+        case "Menu": return "开始"
+        case "View": return "选择"
         default:     return label
         }
     }
@@ -4158,7 +4158,7 @@ struct TouchControlsOverlay: View {
                         m.editing = false
                     }
                 } label: {
-                    Text("Done")
+                    Text("完成")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 18)
@@ -4166,7 +4166,7 @@ struct TouchControlsOverlay: View {
                         .background(GlassShape())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Done editing controls")
+                .accessibilityLabel("完成编辑触控按键")
             } else {
                 // The iOS keyboard for the game, as ⌨ in the portrait key row.
                 glassButton("keyboard") { MetalBackedView.toggleKeyboard() }
@@ -4623,51 +4623,51 @@ struct MappingPanel: View {
             if GamepadInput.keyboardMouseAvailable, !control.action.isPad, control.action != .none, control.action != .keyboardToggle {
                 bindingSection
             }
-            section("Pointer, sticks & special", [
-                ("L click", .mouseLeft), ("R click", .mouseRight),
-                ("WASD", .joystickWASD), ("Arrows", .joystickArrows),
-                ("Keyboard", .keyboardToggle), ("None", .none),
+            section("指针、摇杆与特殊按键", [
+                ("左键", .mouseLeft), ("右键", .mouseRight),
+                ("WASD", .joystickWASD), ("方向键", .joystickArrows),
+                ("键盘", .keyboardToggle), ("无", .none),
             ])
-            section("Letters", letters)
-            section("Numbers", digits)
-            section("Function", fkeys)
-            section("Modifiers & editing", [
+            section("字母", letters)
+            section("数字", digits)
+            section("功能键", fkeys)
+            section("修饰键与编辑", [
                 ("Esc", .key(0x1B)), ("Tab", .key(0x09)), ("Caps", .key(0x14)),
                 ("Shift", .key(0x10)), ("Ctrl", .key(0x11)), ("Alt", .key(0x12)),
-                ("Space", .key(0x20)), ("Enter", .key(0x0D)), ("Bksp", .key(0x08)),
+                ("空格", .key(0x20)), ("回车", .key(0x0D)), ("退格", .key(0x08)),
                 ("Win", .key(0x5B)),
             ])
-            section("Navigation", [
+            section("导航", [
                 ("←", .key(0x25)), ("↑", .key(0x26)), ("→", .key(0x27)), ("↓", .key(0x28)),
                 ("Ins", .key(0x2D)), ("Del", .key(0x2E)), ("Home", .key(0x24)),
                 ("End", .key(0x23)), ("PgUp", .key(0x21)), ("PgDn", .key(0x22)),
             ])
-            section("Symbols", [
+            section("符号", [
                 ("-", .key(0xBD)), ("=", .key(0xBB)), ("[", .key(0xDB)), ("]", .key(0xDD)),
                 ("\\", .key(0xDC)), (";", .key(0xBA)), ("'", .key(0xDE)), (",", .key(0xBC)),
                 (".", .key(0xBE)), ("/", .key(0xBF)), ("`", .key(0xC0)),
             ])
-            section("Numpad", numpad)
+            section("数字键盘", numpad)
         }
     }
 
     private var controllerTab: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Controller controls feed XInput player 1. LS and RS are analogue sticks; "
-                 + "LT and RT are full-press triggers. Touch and physical controls can be used together.")
+            Text("手柄按键控制 XInput 玩家 1。LS 和 RS 为模拟摇杆；"
+                 + "LT 和 RT 为完全按下的扳机键。触控按键可与实体手柄同时使用。")
                 .font(.system(size: 11))
                 .foregroundStyle(.orange.opacity(0.95))
                 .fixedSize(horizontal: false, vertical: true)
-            section("Face", [("A", .pad("A")), ("B", .pad("B")), ("X", .pad("X")), ("Y", .pad("Y"))])
-            section("D-pad", [("D↑", .pad("D↑")), ("D↓", .pad("D↓")),
+            section("面板按键", [("A", .pad("A")), ("B", .pad("B")), ("X", .pad("X")), ("Y", .pad("Y"))])
+            section("方向键", [("D↑", .pad("D↑")), ("D↓", .pad("D↓")),
                               ("D←", .pad("D←")), ("D→", .pad("D→"))])
-            section("Bumpers & triggers", [("LB", .pad("LB")), ("RB", .pad("RB")),
+            section("肩键与扳机键", [("LB", .pad("LB")), ("RB", .pad("RB")),
                                            ("LT", .pad("LT")), ("RT", .pad("RT"))])
-            section("Sticks", [("LS", .pad("LS")), ("RS", .pad("RS")),
+            section("摇杆", [("LS", .pad("LS")), ("RS", .pad("RS")),
                                ("L3", .pad("L3")), ("R3", .pad("R3"))])
             // Start and Select are XInput's Menu and View; the layout keeps the
             // XInput names, the chips and the buttons read Start/Select.
-            section("System", [("Start", .pad("Menu")), ("Select", .pad("View")),
+            section("系统", [("开始", .pad("Menu")), ("选择", .pad("View")),
                                ("Guide", .pad("Guide"))])
         }
     }
@@ -4678,7 +4678,7 @@ struct MappingPanel: View {
     private var bindingSection: some View {
         let names = control.action.stickKeys != nil ? PadBindings.stickNames : PadBindings.buttonNames
         return VStack(alignment: .leading, spacing: 6) {
-            Text("Controller button for this action (keyboard & mouse mode)")
+            Text("此操作对应的手柄按键（键盘与鼠标模式）")
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundStyle(.white.opacity(0.45))
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 48), spacing: 6)], spacing: 6) {
@@ -4688,7 +4688,7 @@ struct MappingPanel: View {
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                         if let i = m.index(of: control.id) { m.controls[i].padBinding = on ? nil : name }
                     } label: {
-                        Text(name == "Menu" ? "Start" : name == "View" ? "Select" : name)
+                        Text(name == "Menu" ? "开始" : name == "View" ? "选择" : name)
                             .font(.system(size: 12, weight: .medium)).lineLimit(1).minimumScaleFactor(0.55)
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, minHeight: 30)

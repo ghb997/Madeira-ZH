@@ -372,12 +372,12 @@ enum DockInstallScripts {
         }
         guard items.contains(where: { $0.status != .done }) else { return nil }
         var parts: [String] = []
-        if !names(.pending).isEmpty { parts.append("Runs first: " + names(.pending)) }
-        if !names(.done).isEmpty { parts.append("Already done: " + names(.done)) }
-        if !names(.missing).isEmpty { parts.append("Installer file missing: " + names(.missing)) }
-        if !names(.unsupported).isEmpty { parts.append("Cannot run in this build: " + names(.unsupported)) }
-        if !names(.limit).isEmpty { parts.append("Next start: " + names(.limit)) }
-        return "One-time installs. " + parts.joined(separator: ". ") + "."
+        if !names(.pending).isEmpty { parts.append("先运行：" + names(.pending)) }
+        if !names(.done).isEmpty { parts.append("已完成：" + names(.done)) }
+        if !names(.missing).isEmpty { parts.append("安装程序文件缺失：" + names(.missing)) }
+        if !names(.unsupported).isEmpty { parts.append("当前版本无法运行：" + names(.unsupported)) }
+        if !names(.limit).isEmpty { parts.append("下次启动：" + names(.limit)) }
+        return "首次运行组件安装。" + parts.joined(separator: ". ") + "."
     }
 
     /// A program's label for logs, the batch and the sheet: the entry name, reduced to
@@ -559,10 +559,10 @@ enum DockInstallers {
     /// session of their own also leaves madsync on for the game. One session runs per app run,
     /// so the game starts after a restart of Madeira.
     private(set) static var installsOnly = false
-    nonisolated static let restartWords = "To start the game, restart Madeira: swipe it away in the app switcher, open it again and start the game."
+    nonisolated static let restartWords = "要启动游戏，请重启 Madeira：在应用切换器中划掉它，然后重新打开并启动游戏。"
     /// What the starting screen says once the installs ended, until the session has closed (the
     /// wineserver writes the registry to disk as it stops; Madeira asks for the restart then).
-    nonisolated static let closingWords = "This session now closes. Madeira asks you to restart it when it has; wait for that."
+    nonisolated static let closingWords = "此会话即将关闭。关闭后 Madeira 会提示重启，请等待提示。"
     /// madeira-bcd: the game's lines a session of one-time installs runs without. Social Club's
     /// layout 2 (env.MADEIRA_SC_PA_POOLS) and RDR2's hold (env.MADEIRA_RDR2_VA_HOLD) take the
     /// 4 GB slots 32-bit programs run in, so the Visual C++ setups' second 32-bit process could
@@ -698,9 +698,9 @@ enum DockInstallers {
     /// (a Windows Installer package, a 32-bit executable) and what the bundle has, never by
     /// its name: a package needs msiexec.exe, a 32-bit executable needs 32-bit support.
     nonisolated static func runnable(_ process: SteamInstallProcess, drive: URL, has32Bit: Bool, hasMsiexec: Bool) -> String? {
-        if process.executable.lowercased().hasSuffix(".msi") { return hasMsiexec ? nil : "Windows Installer package" }
+        if process.executable.lowercased().hasSuffix(".msi") { return hasMsiexec ? nil : "Windows Installer 安装包" }
         guard let file = resolve(process.executable, drive: drive), let machine = machine(file) else { return nil }
-        return machine == 0x14c && !has32Bit ? "32-bit installer" : nil
+        return machine == 0x14c && !has32Bit ? "32 位安装程序" : nil
     }
 
     nonisolated static var bundleHas32Bit: Bool { bundled("i386-windows") }
@@ -940,13 +940,13 @@ enum DockInstallers {
                                 "key=\(run.hive == .machine ? "HKLM" : "HKCU")\\\(run.key) recorded=\(recorded) minimum=\(run.value)\(lastRun)")
         }
         if skipped {
-            note = "One-time installs skipped. To run them, choose Run at next start under One-time installs."
+            note = "已跳过首次运行组件安装。如需安装，请在“首次运行组件安装”中选择“下次启动时运行”。"
         } else {
             note = DockInstallScripts.note(items)
             if installsOnly {
-                note = (note.map { $0 + " " } ?? "") + "This start runs only them; afterwards restart Madeira and start the game again."
+                note = (note.map { $0 + " " } ?? "") + "本次启动仅运行安装程序；之后请重启 Madeira 并再次启动游戏。"
             } else if serverSync && madsyncConfigured {
-                note = (note.map { $0 + " " } ?? "") + "This start uses Wine's standard synchronization instead of madsync; the next start uses madsync again."
+                note = (note.map { $0 + " " } ?? "") + "本次启动使用 Wine 标准同步，下次启动会恢复使用 madsync。"
             }
         }
         // Those still not recorded and not run again now are named in the note, so an
@@ -956,7 +956,7 @@ enum DockInstallers {
         }.map { DockInstallScripts.label($0.process.run) }
         if !stillUnfinished.isEmpty {
             let names = stillUnfinished.joined(separator: ", ")
-            let words = "Last run did not finish: \(names) (its installer never closed). If it installed, choose Record as done under One-time installs."
+            let words = "上次运行未完成：\(names)（安装程序未关闭）。如果已经安装完成，请在“首次运行组件安装”中选择“标记为已完成”。"
             note = (note.map { $0 + " " } ?? "") + words
             LogStore.shared.log("[dock-installers] app=\(app) unfinished=\(stillUnfinished.joined(separator: ",")): the last batch started it and saw no exit status")
         }
@@ -1040,7 +1040,7 @@ enum DockInstallers {
     static func poll(drive: URL, now: Date = Date()) -> String? {
         guard script != nil else { return nil }
         let file = drive.appendingPathComponent(resultName)
-        guard let contents = try? Data(contentsOf: file), contents.count <= 16384 else { return "Starting this game's one-time installs…" }
+        guard let contents = try? Data(contentsOf: file), contents.count <= 16384 else { return "正在开始安装此游戏的首次运行组件…" }
         let results = DockInstallScripts.results(String(decoding: contents, as: UTF8.self))
         if let services = results.services, logged.insert("services").inserted {
             LogStore.shared.log("[dock-installers] services=\(services)", level: services == "failed" || services == "timeout" ? .error : .info)
@@ -1051,20 +1051,20 @@ enum DockInstallers {
         var failed: [String] = []
         for (index, status) in results.exits.sorted(by: { $0.key < $1.key }) {
             let ok = DockInstallScripts.Results.succeeded(status)
-            if !ok { failed.append("\(results.started[index] ?? "#\(index)") (exit \(status))") }
+            if !ok { failed.append("\(results.started[index] ?? "#\(index)")（退出码 \(status)）") }
             guard logged.insert("e\(index)").inserted else { continue }
             LogStore.shared.log("[dock-installers] exit \(index)/\(results.total) program=\(results.started[index] ?? "") status=\(status) " +
                                 (ok ? "succeeded; recorded at the next start" : "failed; not recorded"), level: ok ? .info : .error)
         }
-        let failures = failed.isEmpty ? "" : "\nFailed: " + failed.joined(separator: ", ")
+        let failures = failed.isEmpty ? "" : "\n失败：" + failed.joined(separator: ", ")
         if let running = results.running {
             if runningSince?.index != running { runningSince = (running, now) }
             let seconds = max(0, Int(now.timeIntervalSince(runningSince?.at ?? now)))
             let program = results.started[running] ?? ""
-            var text = "Running one-time install \(running) of \(max(results.total, running)): \(program)…"
+            var text = "正在安装首次运行组件 \(running)/\(max(results.total, running))：\(program)…"
             if seconds >= stallSeconds {
-                let hint = "If its window no longer changes, it may have finished without closing. Ending the session leaves it unrecorded; Record as done under One-time installs records it."
-                text += " (\(seconds / 60) min)\n" + hint
+                let hint = "如果窗口不再变化，可能已安装完成但未关闭。直接结束会话不会记录完成状态；可在“首次运行组件安装”中选择“标记为已完成”。"
+                text += "（\(seconds / 60) 分钟）\n" + hint
                 if logged.insert("stall\(running)").inserted {
                     let line = "[dock-installers] still running \(running)/\(results.total) program=\(program) after \(seconds) s; the host waits for it (an installer window that never closes keeps the batch here)"
                     LogStore.shared.log(line, level: .error)
@@ -1072,7 +1072,7 @@ enum DockInstallers {
             }
             return text + failures
         }
-        guard results.ended else { return "Running this game's one-time installs…" + failures }
+        guard results.ended else { return "正在安装此游戏的首次运行组件…" + failures }
         let total = max(results.total, results.exits.count), succeeded = results.exits.count - failed.count
         if logged.insert("end").inserted {
             finishedAt = Date()
@@ -1080,7 +1080,7 @@ enum DockInstallers {
                                 (installsOnly ? "the session ends, the game starts after a restart" : "the host starts next"))
         }
         allSucceeded = total > 0 && succeeded == total
-        return "One-time installs finished: \(succeeded) of \(total) succeeded." + failures
+        return "首次运行组件安装已完成：\(succeeded)/\(total) 项成功。" + failures
     }
 
     /// madeira-bcd: the batch ended and every program in it succeeded (poll).
@@ -1090,7 +1090,7 @@ enum DockInstallers {
     /// owner's words (2026-10-12): all succeeded, or the count and the failed programs. `ended`
     /// is poll's text, nil when the batch never ended.
     static func restartNotice(_ ended: String?) -> String {
-        if allSucceeded { return "One-time installs completed successfully. Close Madeira and open it again to play the game." }
-        return (ended ?? "One-time installs ended.") + "\nClose Madeira and open it again to play the game."
+        if allSucceeded { return "首次运行组件已全部安装成功。请关闭并重新打开 Madeira 后游玩。" }
+        return (ended ?? "首次运行组件安装已结束。") + "\n请关闭并重新打开 Madeira 后游玩。"
     }
 }

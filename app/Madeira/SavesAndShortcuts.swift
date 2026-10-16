@@ -115,16 +115,16 @@ struct SaveZipReader {
         data = b
         func fail(_ m: String) -> Error { LibraryError.message(m) }
         func u16(_ o: Int) throws -> Int {
-            guard o >= 0, o + 2 <= b.count else { throw fail("The zip is truncated.") }
+            guard o >= 0, o + 2 <= b.count else { throw fail("ZIP 文件不完整。") }
             return Int(b[b.startIndex + o]) | Int(b[b.startIndex + o + 1]) << 8
         }
         func u32(_ o: Int) throws -> Int { let lo = try u16(o), hi = try u16(o + 2); return lo | hi << 16 }
         func u64(_ o: Int) throws -> Int {
             let lo = try u32(o), hi = try u32(o + 4)
-            guard hi < 0x10000 else { throw fail("The zip is too large.") }
+            guard hi < 0x10000 else { throw fail("ZIP 文件过大。") }
             return lo | hi << 32
         }
-        guard b.count >= 22 else { throw fail("Not a zip file.") }
+        guard b.count >= 22 else { throw fail("这不是 ZIP 文件。") }
         var eocd = -1
         var p = b.count - 22
         let lowest = max(0, b.count - 22 - 65_535)
@@ -132,27 +132,27 @@ struct SaveZipReader {
             if try u32(p) == 0x0605_4b50 { eocd = p; break }
             p -= 1
         }
-        guard eocd >= 0 else { throw fail("Not a zip file.") }
+        guard eocd >= 0 else { throw fail("这不是 ZIP 文件。") }
         var count = try u16(eocd + 10)
         var cdOffset = try u32(eocd + 16)
         if count == 0xFFFF || cdOffset == 0xFFFF_FFFF {
             let loc = eocd - 20
-            guard try u32(loc) == 0x0706_4b50 else { throw fail("Broken zip64 record.") }
+            guard try u32(loc) == 0x0706_4b50 else { throw fail("ZIP64 记录已损坏。") }
             let z = try u64(loc + 8)
-            guard try u32(z) == 0x0606_4b50 else { throw fail("Broken zip64 record.") }
+            guard try u32(z) == 0x0606_4b50 else { throw fail("ZIP64 记录已损坏。") }
             count = try u64(z + 32)
             cdOffset = try u64(z + 48)
         }
         var list: [Entry] = []
         var q = cdOffset
         for _ in 0..<count {
-            guard try u32(q) == 0x0201_4b50 else { throw fail("Broken zip directory.") }
+            guard try u32(q) == 0x0201_4b50 else { throw fail("ZIP 目录已损坏。") }
             let method = try u16(q + 10)
             var csize = try u32(q + 20)
             var usize = try u32(q + 24)
             let nlen = try u16(q + 28), elen = try u16(q + 30), clen = try u16(q + 32)
             var loff = try u32(q + 42)
-            guard q + 46 + nlen <= b.count else { throw fail("The zip is truncated.") }
+            guard q + 46 + nlen <= b.count else { throw fail("ZIP 文件不完整。") }
             let start = b.startIndex + q + 46
             let name = String(decoding: b[start..<(start + nlen)], as: UTF8.self)
             // zip64 extra field: the 0xFFFFFFFF fields, in this order.
@@ -180,12 +180,12 @@ struct SaveZipReader {
         guard o >= 0, o + 30 <= b.count,
               b[b.startIndex + o] == 0x50, b[b.startIndex + o + 1] == 0x4b,
               b[b.startIndex + o + 2] == 0x03, b[b.startIndex + o + 3] == 0x04 else {
-            throw LibraryError.message("Broken zip entry \(e.name).")
+            throw LibraryError.message("ZIP 条目 \(e.name) 已损坏。")
         }
         let nlen = Int(b[b.startIndex + o + 26]) | Int(b[b.startIndex + o + 27]) << 8
         let elen = Int(b[b.startIndex + o + 28]) | Int(b[b.startIndex + o + 29]) << 8
         let start = o + 30 + nlen + elen
-        guard e.compressedSize >= 0, start + e.compressedSize <= b.count else { throw LibraryError.message("The zip is truncated.") }
+        guard e.compressedSize >= 0, start + e.compressedSize <= b.count else { throw LibraryError.message("ZIP 文件不完整。") }
         let src = b.subdata(in: (b.startIndex + start)..<(b.startIndex + start + e.compressedSize))
         switch e.method {
         case 0:
@@ -200,10 +200,10 @@ struct SaveZipReader {
                     return compression_decode_buffer(d, e.size, sp, s.count, nil, COMPRESSION_ZLIB)
                 }
             }
-            guard written == e.size else { throw LibraryError.message("\(e.name) could not be decompressed.") }
+            guard written == e.size else { throw LibraryError.message("无法解压 \(e.name)。") }
             return out
         default:
-            throw LibraryError.message("\(e.name) uses zip method \(e.method), which is not supported.")
+            throw LibraryError.message("\(e.name) 使用不支持的 ZIP 压缩方式 \(e.method)。")
         }
     }
 }
@@ -229,7 +229,7 @@ enum SaveBackup {
         let fm = FileManager.default
         let drive = LibraryModel.drive
         let users = drive.appendingPathComponent("users", isDirectory: true)
-        guard fm.fileExists(atPath: users.path) else { throw LibraryError.message("There is no Windows drive yet.") }
+        guard fm.fileExists(atPath: users.path) else { throw LibraryError.message("尚未创建 Windows 磁盘。") }
         let stamp = DateFormatter(); stamp.dateFormat = "yyyy-MM-dd_HH-mm"
         let out = fm.temporaryDirectory.appendingPathComponent("Madeira-saves-\(stamp.string(from: Date())).zip")
         try? fm.removeItem(at: out)
@@ -278,7 +278,7 @@ enum SaveBackup {
             try zip.extract(e).write(to: dst, options: .atomic)
             n += 1
         }
-        if n == 0 { throw LibraryError.message("That zip holds no saves (nothing under users/).") }
+        if n == 0 { throw LibraryError.message("此 ZIP 中没有存档（users/ 下没有内容）。") }
         LogStore.shared.log("[saves] restored \(n) files from \(url.lastPathComponent)")
         return n
     }
@@ -316,8 +316,8 @@ struct SavesSection: View {
                         busy = false
                         switch r {
                         case .success(let b):
-                            message = "\(b.files) files, \(ByteCountFormatter.string(fromByteCount: Int64(b.bytes), countStyle: .file))"
-                                + (b.leftOut > 0 ? "; \(b.leftOut) very large files left out" : "")
+                            message = "\(b.files) 个文件，\(ByteCountFormatter.string(fromByteCount: Int64(b.bytes), countStyle: .file))"
+                                + (b.leftOut > 0 ? "；已跳过 \(b.leftOut) 个过大的文件" : "")
                             shareURL = b.url
                         case .failure(let e):
                             message = e.localizedDescription
@@ -326,22 +326,22 @@ struct SavesSection: View {
                 }
             } label: {
                 HStack {
-                    Label("Back up saves", systemImage: "externaldrive.badge.icloud")
+                    Label("备份存档", systemImage: "externaldrive.badge.icloud")
                     if busy { Spacer(); ProgressView() }
                 }
             }
             .disabled(busy)
             Button { importing = true } label: {
-                Label("Restore saves from a backup…", systemImage: "arrow.uturn.backward.circle")
+                Label("从备份恢复存档…", systemImage: "arrow.uturn.backward.circle")
             }
             .disabled(busy)
             if let m = message { Text(m).font(.caption).foregroundStyle(.secondary) }
         } header: {
-            Text("Saves")
+            Text("存档")
         } footer: {
-            Text("A backup is one zip of every Windows user's Documents, Saved Games and AppData (caches left out), "
-                 + "to keep in Files or iCloud Drive. Restoring puts those files back and overwrites saves with "
-                 + "the same names.")
+            Text("备份会将所有 Windows 用户的 Documents、Saved Games 和 AppData 文件夹打包成一个 ZIP（不含缓存），"
+                 + "可保存在“文件”App 或 iCloud 云盘中。恢复时会将文件放回原位，并覆盖"
+                 + "同名存档。")
         }
         // The zip is a copy made for sharing: removed once the share sheet closes.
         .sheet(item: Binding(get: { shareURL.map { SharedFile(url: $0) } }, set: {
@@ -355,10 +355,10 @@ struct SavesSection: View {
         .fileImporter(isPresented: $importing, allowedContentTypes: [.zip]) { r in
             if case .success(let url) = r { pendingRestore = url }
         }
-        .confirmationDialog("Restore saves from \(pendingRestore?.lastPathComponent ?? "the backup")?",
+        .confirmationDialog("从 \(pendingRestore?.lastPathComponent ?? "备份") 恢复存档？",
                             isPresented: Binding(get: { pendingRestore != nil }, set: { if !$0 { pendingRestore = nil } }),
                             titleVisibility: .visible) {
-            Button("Restore", role: .destructive) {
+            Button("恢复", role: .destructive) {
                 guard let url = pendingRestore else { return }
                 pendingRestore = nil
                 busy = true
@@ -367,14 +367,14 @@ struct SavesSection: View {
                     DispatchQueue.main.async {
                         busy = false
                         switch r {
-                        case .success(let n): message = "\(n) files restored."
+                        case .success(let n): message = "已恢复 \(n) 个文件。"
                         case .failure(let e): message = e.localizedDescription
                         }
                     }
                 }
             }
         } message: {
-            Text("Files with the same names in C:\\users are overwritten.")
+            Text("C:\\users 中的同名文件将被覆盖。")
         }
     }
 }

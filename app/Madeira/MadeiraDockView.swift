@@ -66,7 +66,7 @@ final class MadeiraDockModel: ObservableObject {
     /// Downloads and unpacks Valve's client components (no Wine session).
     func prepareClient() {
         guard !preparing else { return }
-        preparing = true; error = nil; progress = "Starting…"
+        preparing = true; error = nil; progress = "正在启动…"
         Task { @MainActor in
             do {
                 try await SteamRuntimeInstaller.shared.prepare(prefix: MadeiraDock.prefix) { text in
@@ -86,8 +86,8 @@ final class MadeiraDockModel: ObservableObject {
     /// without one, then removes any unconsumed sign-in transfer.
     func watchReport() {
         watch?.cancel()
-        let starting = DockInstallers.installsOnly ? "Running this game's one-time installs…"
-                                                   : "Madeira Dock is starting. Valve's client signs in and checks the license."
+        let starting = DockInstallers.installsOnly ? "正在安装此游戏的首次运行组件…"
+                                                   : "Madeira Dock 正在启动。Valve 客户端将登录并检查许可。"
         let plan = DockInstallers.note
         status = plan.map { $0 + "\n" + starting } ?? starting
         if let plan { LogStore.shared.log("[dock-installers] " + plan) }
@@ -107,7 +107,7 @@ final class MadeiraDockModel: ObservableObject {
                         status = failure
                         LogStore.shared.log("[madeira-dock] " + failure, level: .error)
                     } else {
-                        status = "Madeira Dock finished normally."
+                        status = "Madeira Dock 已正常结束。"
                         LogStore.shared.log("[madeira-dock] host finished (result 0)")
                     }
                     break
@@ -115,13 +115,13 @@ final class MadeiraDockModel: ObservableObject {
                 // Steam still counts another session of this account as playing
                 // (launch refusal 35); the host asks again for up to three minutes.
                 if report.fields["launch-session-wait"] != nil, report.fields["launch-client-error"] == "35" {
-                    status = "Steam says this account is still playing in another session. Waiting for Steam to end it (up to 3 minutes)…"
+                    status = "Steam 提示此账户仍在其他会话中游玩。正在等待 Steam 结束该会话（最多 3 分钟）…"
                 }
                 // The session starts after the JIT pool is set up; count only once it ran.
                 let running = wine_process_is_running() != 0 || wineserver_is_running() != 0
                 if running { started = true; idle = 0 } else { idle += 1 }
                 if !started && idle >= 150 {
-                    status = "The Dock session did not start. See the log."
+                    status = "Dock 会话未启动。请查看日志。"
                     break
                 }
                 // madeira-bcd: a program an installer started (a launcher, a helper) can keep a
@@ -130,7 +130,7 @@ final class MadeiraDockModel: ObservableObject {
                 if DockInstallers.installsOnly, running, !offered, let finished = DockInstallers.finishedAt,
                    Date().timeIntervalSince(finished) >= 45 {
                     offered = true
-                    let ended = DockInstallers.poll(drive: MadeiraDock.drive) ?? "One-time installs finished."
+                    let ended = DockInstallers.poll(drive: MadeiraDock.drive) ?? "首次运行组件安装已完成。"
                     status = ended + "\n" + DockInstallers.restartWords
                     LogStore.shared.log("[dock-installers] the session still runs 45 s after the installs ended (a program they started); the restart is offered now")
                     LibraryModel.shared.restartNotice = DockInstallers.restartNotice(ended)
@@ -140,12 +140,12 @@ final class MadeiraDockModel: ObservableObject {
                         // madeira-bcd: a session of one-time installs ends after its batch, and the
                         // game starts in the next app run (DockInstallers.installsOnly). The
                         // wineserver has stopped by now, so the registry is on disk.
-                        let ended = DockInstallers.poll(drive: MadeiraDock.drive) ?? "One-time installs ended."
+                        let ended = DockInstallers.poll(drive: MadeiraDock.drive) ?? "首次运行组件安装已结束。"
                         status = ended + "\n" + DockInstallers.restartWords
                         LogStore.shared.log("[dock-installers] the installs-only session ended; the game starts after Madeira is restarted")
                         LibraryModel.shared.restartNotice = DockInstallers.restartNotice(DockInstallers.poll(drive: MadeiraDock.drive))
                     } else {
-                        status = "Madeira Dock stopped before reporting a result. Export the log."
+                        status = "Madeira Dock 在报告结果前已停止。请导出日志。"
                         LogStore.shared.log("[madeira-dock] session ended without a host result", level: .error)
                     }
                     break
@@ -171,69 +171,69 @@ struct MadeiraDockView: View {
         NavigationStack {
             Form {
                 Section {
-                    Text("Madeira Dock starts an installed Steam game through Valve's own Steam client, without the Steam desktop window. Valve's client signs in with your account and decides whether the game may run.")
+                    Text("Madeira Dock 通过 Valve 官方 Steam 客户端启动已安装的游戏，但不显示 Steam 桌面窗口。客户端使用你的账户登录，并检查游戏运行许可。")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
-                Section("Steam account") {
+                Section("Steam 账户") {
                     if let name = signIn.accountName {
-                        LabeledContent("Signed in", value: name)
+                        LabeledContent("已登录", value: name)
                     } else {
-                        Button("Sign in to Steam") { showSignIn = true }
+                        Button("登录 Steam") { showSignIn = true }
                     }
                 }
                 Section {
                     if dock.clientInstalled {
-                        Label("Valve's client components are installed", systemImage: "checkmark.circle")
+                        Label("Valve 客户端组件已安装", systemImage: "checkmark.circle")
                     } else if dock.preparing {
                         HStack(spacing: 12) { ProgressView(); Text(dock.progress).foregroundStyle(.secondary) }
                     } else {
-                        Button("Download Valve's client components (about 73 MB)") { dock.prepareClient() }
+                        Button("下载 Valve 客户端组件（约 73 MB）") { dock.prepareClient() }
                     }
-                } header: { Text("Steam client") } footer: {
-                    Text("Downloaded from Valve's update servers and checked against pinned SHA-256 sums. Existing Steam files are kept.")
+                } header: { Text("Steam 客户端") } footer: {
+                    Text("从 Valve 更新服务器下载，并通过预设的 SHA-256 校验和验证。现有 Steam 文件会保留。")
                 }
                 Section {
                     if dock.games.isEmpty {
-                        Text("No installed Steam games were found in the Steam library in drive_c.").foregroundStyle(.secondary)
+                        Text("drive_c 的 Steam 游戏库中未找到已安装的游戏。").foregroundStyle(.secondary)
                     }
                     ForEach(dock.games) { game in
                         Button { start(game, dock.compactPool); dismiss() } label: {
                             HStack {
                                 Text(game.name)
                                 Spacer()
-                                if !game.installed { Text("Not fully installed").font(.caption).foregroundStyle(.secondary) }
+                                if !game.installed { Text("尚未安装完成").font(.caption).foregroundStyle(.secondary) }
                             }
                         }
                         .disabled(!game.installed || !dock.clientInstalled || !signIn.signedIn)
                     }
-                    Toggle("Smaller JIT pool (512 MB) for this launch", isOn: $dock.compactPool)
-                } header: { Text("Installed games") } footer: {
-                    Text("Games Steam's client has installed in this prefix. Only Steam's default launch option is used.")
+                    Toggle("本次启动使用较小的 JIT 内存池（512 MB）", isOn: $dock.compactPool)
+                } header: { Text("已安装的游戏") } footer: {
+                    Text("Steam 客户端在此 Wine 环境中安装的游戏。仅使用 Steam 默认启动选项。")
                 }
                 if !dock.installPrograms.isEmpty {
                     Section {
                         ForEach(dock.games.filter { dock.installPrograms[$0.id] != nil }) { game in
                             Picker(game.name, selection: Binding(get: { dock.installRunNext[game.id] ?? true },
                                                                  set: { dock.setRunsInstallers(game.id, $0) })) {
-                                Text("Run at next start").tag(true)
-                                Text("Skip").tag(false)
+                                Text("下次启动时运行").tag(true)
+                                Text("跳过").tag(false)
                             }
                             .pickerStyle(.menu)
                             DockInstallRequestRows(dock: dock, appID: game.id, name: game.name)
                         }
-                    } header: { Text("One-time installs") } footer: {
-                        Text("Programs from a game's Steam install script, such as runtime setups, that Steam's desktop client runs before a first start. A Dock start runs the ones not yet recorded as done before Valve's client starts; the choice then changes to Skip. Record as done and Reset take effect at the game's next Dock start.")
+                    } header: { Text("首次运行组件安装") } footer: {
+                        Text("这些程序来自游戏的 Steam 安装脚本（例如运行库安装），Steam 桌面客户端会在首次启动前运行。Dock 会在 Valve 客户端启动前运行尚未标记完成的程序，随后选项自动变为“跳过”。“标记为已完成”和“重置”会在下次通过 Dock 启动此游戏时生效。")
                     }
                 }
                 if let status = dock.status {
-                    Section("Dock status") { Text(status) }
+                    Section("Dock 状态") { Text(status) }
                 }
                 if let error = dock.error {
                     Section { Label(error, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red) }
                 }
             }
             .navigationTitle("Madeira Dock").navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("完成") { dismiss() } } }
             .onAppear { dock.refresh(); signIn.refresh() }
             .sheet(isPresented: $showSignIn) { SteamSignInView() }
         }
@@ -257,31 +257,31 @@ struct DockInstallRequestRows: View {
         Group {
             if let request = dock.installRequest[appID] {
                 HStack {
-                    Text(request == .record ? "Next start: one-time installs recorded as done."
-                         : request == .resetSignOut ? "Next start: one-time installs and Rockstar sign-in removed, then installed again."
-                         : "Next start: one-time installs removed, then installed again.")
+                    Text(request == .record ? "下次启动：将首次运行组件安装标记为已完成。"
+                         : request == .resetSignOut ? "下次启动：移除首次运行组件及 Rockstar 登录信息，然后重新安装。"
+                         : "下次启动：移除首次运行组件，然后重新安装。")
                         .font(.caption).foregroundStyle(.secondary)
                     Spacer()
-                    Button("Cancel") { dock.setInstallRequest(appID, nil) }.font(.caption)
+                    Button("取消") { dock.setInstallRequest(appID, nil) }.font(.caption)
                 }
             } else {
-                Button("Record as done…") { confirmRecord = true }
-                Button("Reset one-time installs…", role: .destructive) { confirmReset = true }
+                Button("标记为已完成…") { confirmRecord = true }
+                Button("重置首次运行组件…", role: .destructive) { confirmReset = true }
             }
         }
-        .confirmationDialog("Record \(name)'s one-time installs as done?", isPresented: $confirmRecord, titleVisibility: .visible) {
-            Button("Record as done") { dock.setInstallRequest(appID, .record) }
-            Button("Cancel", role: .cancel) { }
+        .confirmationDialog("将 \(name) 的首次运行组件安装标记为已完成？", isPresented: $confirmRecord, titleVisibility: .visible) {
+            Button("标记为已完成") { dock.setInstallRequest(appID, .record) }
+            Button("取消", role: .cancel) { }
         } message: {
-            Text("For an installer that finished its work but never closed, so Madeira never saw it end. At the next start the game's own install-script programs are recorded as done, as a finished run would be, and are not run again. Nothing is installed or removed.")
+            Text("适用于已经完成安装但未关闭的安装程序，Madeira 因此未能检测到结束。下次启动时，会将此游戏安装脚本中的程序标记为已完成，与正常结束安装相同，之后不再运行。不会安装或移除任何内容。")
         }
         // madeira-bcd: a reset removes what the installers put in (DockReset.swift), into a backup.
-        .confirmationDialog("Reset \(name)'s one-time installs?", isPresented: $confirmReset, titleVisibility: .visible) {
-            Button("Reset at next start", role: .destructive) { dock.setInstallRequest(appID, .reset) }
-            Button("Reset and sign out of Rockstar", role: .destructive) { dock.setInstallRequest(appID, .resetSignOut) }
-            Button("Cancel", role: .cancel) { }
+        .confirmationDialog("重置 \(name) 的首次运行组件？", isPresented: $confirmReset, titleVisibility: .visible) {
+            Button("下次启动时重置", role: .destructive) { dock.setInstallRequest(appID, .reset) }
+            Button("重置并退出 Rockstar", role: .destructive) { dock.setInstallRequest(appID, .resetSignOut) }
+            Button("取消", role: .cancel) { }
         } message: {
-            Text("At the next start Madeira removes what the one-time installs put into Wine: the Rockstar Games Launcher, Social Club, the Visual C++ 2015-2022 runtimes (x86 and x64) and the Vulkan runtime. That start then runs only the installers again, as on a new device; after it, restart Madeira and start the game. Games sharing these installs (GTA V, Red Dead Redemption 2) install them again at their next start too. The game files and saves stay. Everything removed is kept in the madeira-reset-backup folder in Madeira's Documents. Sign out also removes the Rockstar sign-in.")
+            Text("下次启动时，Madeira 会移除首次运行安装到 Wine 中的组件：Rockstar Games Launcher、Social Club、Visual C++ 2015-2022 运行库（x86 和 x64）及 Vulkan 运行库。该次启动仅会重新运行安装程序，如同新设备；完成后请重启 Madeira 并启动游戏。共用这些组件的游戏（GTA V、Red Dead Redemption 2）也会在下次启动时重新安装。游戏文件和存档会保留。移除的内容会保存在 Madeira 的 Documents/madeira-reset-backup 文件夹中。“退出”还会移除 Rockstar 登录信息。")
         }
     }
 }

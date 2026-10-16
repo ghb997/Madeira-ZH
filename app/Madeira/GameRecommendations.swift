@@ -71,16 +71,16 @@ struct GameRecommendation: Equatable {
     /// A short list of the switches it sets, for Game details.
     var switchSummary: String {
         var parts: [String] = []
-        if let avx { parts.append("AVX \(avx ? "on" : "off")") }
-        if let nvidia { parts.append("NVIDIA \(nvidia ? "on" : "off")") }
-        if let wineVCRT { parts.append("Wine's C++ runtime \(wineVCRT ? "on" : "off")") }
-        if fastSync == false { parts.append("fast synchronization off") }
-        if let semaphoreFastPath { parts.append("fast semaphore waits \(semaphoreFastPath ? "on" : "off")") }
+        if let avx { parts.append("AVX：\(avx ? "开启" : "关闭")") }
+        if let nvidia { parts.append("NVIDIA：\(nvidia ? "开启" : "关闭")") }
+        if let wineVCRT { parts.append("Wine C++ 运行时：\(wineVCRT ? "开启" : "关闭")") }
+        if fastSync == false { parts.append("快速同步关闭") }
+        if let semaphoreFastPath { parts.append("快速信号量等待：\(semaphoreFastPath ? "开启" : "关闭")") }
         if let fpsMode {
-            let label = [1: "60", 3: "30", 4: "40", 0: "display maximum", 2: "uncapped"][fpsMode] ?? "\(fpsMode)"
-            parts.append("FPS limit \(label)")
+            let label = [1: "60", 3: "30", 4: "40", 0: "显示器最高帧率", 2: "不限帧率"][fpsMode] ?? "\(fpsMode)"
+            parts.append("帧率上限：\(label)")
         }
-        if let resolution { parts.append(resolution == Self.screen720 ? "this screen's shape at 720 lines" : resolution) }
+        if let resolution { parts.append(resolution == Self.screen720 ? "按本屏幕比例的 720 行分辨率" : resolution) }
         return parts.joined(separator: ", ")
     }
 }
@@ -118,10 +118,10 @@ enum GameRecommendations {
     /// waited for it forever (12:43). With the line the setup fails at once and
     /// the installs pass (12:57); the session links its own VC++ DLLs anyway.
     static let rdr2Steam = GameRecommendation(
-        id: "rdr2-steam", title: "Red Dead Redemption 2 (Steam)", version: 10,
+        id: "rdr2-steam", title: "荒野大镖客：救赎 2（Steam）", version: 10,
         config: """
-        # Madeira's recommended settings for Red Dead Redemption 2 (Steam).
-        # Reset to Recommended, at the bottom of the game's settings, brings them back.
+        # Madeira 为《荒野大镖客：救赎 2》（Steam）推荐的设置。
+        # 在游戏设置底部选择“恢复推荐设置”，可恢复以下配置。
         d3d12-caps-log = 2
         d3d12-shader-pack = 1
         replay-split = 1
@@ -170,7 +170,7 @@ enum GameRecommendations {
         env.WINEDLLOVERRIDES = video64=
         env.MADEIRA_DEVICE_STATS = 1
         env.MADEIRA_METAL_HUD_MAIN = 1
-        # madeira-bcd's defaults, which this list was tested with (upstream's differ).
+        # 此配置经过测试的 madeira-bcd 默认值（与上游默认值不同）。
         env.MADEIRA_FREE_DELAY_MS = 2000
         env.MADEIRA_CTX_CPU_AREA = 2
         env.MADEIRA_WAIT_CHILDREN = 1
@@ -189,10 +189,10 @@ enum GameRecommendations {
     /// that keep that session alive), plus the line GTA V Enhanced's list outside
     /// Steam starts with: the [ec-hook] reporter off.
     static let rdr2Other = GameRecommendation(
-        id: "rdr2-other", title: "Red Dead Redemption 2 (outside Steam)", version: 1,
+        id: "rdr2-other", title: "荒野大镖客：救赎 2（非 Steam）", version: 1,
         config: """
-        # Madeira's recommended settings for Red Dead Redemption 2 outside Steam (Rockstar Games Launcher or another store).
-        # Reset to Recommended, at the bottom of the game's settings, brings them back.
+        # Madeira 为《荒野大镖客：救赎 2》非 Steam 版本（Rockstar Games Launcher 或其他商店）推荐的设置。
+        # 在游戏设置底部选择“恢复推荐设置”，可恢复以下配置。
         d3d12-caps-log = 2
         d3d12-shader-pack = 1
         replay-split = 1
@@ -240,7 +240,7 @@ enum GameRecommendations {
         env.MADEIRA_DEVICE_STATS = 1
         env.MADEIRA_METAL_HUD_MAIN = 1
         env.MADEIRA_EC_HOOK_TRACE = 0
-        # madeira-bcd's defaults, which this list was tested with (upstream's differ).
+        # 此配置经过测试的 madeira-bcd 默认值（与上游默认值不同）。
         env.MADEIRA_FREE_DELAY_MS = 2000
         env.MADEIRA_CTX_CPU_AREA = 2
         env.MADEIRA_WAIT_CHILDREN = 1
@@ -259,10 +259,10 @@ enum GameRecommendations {
     /// install's VC++ setup may not start its elevated engine, as for RDR2
     /// (with the line GTA's installs passed, 13:08).
     static let gta5EnhancedSteam = GameRecommendation(
-        id: "gta5e-steam", title: "GTA V Enhanced (Steam)", version: 3,
+        id: "gta5e-steam", title: "GTA V 增强版（Steam）", version: 3,
         config: """
-        # Madeira's recommended settings for GTA V Enhanced (Steam).
-        # Reset to Recommended, at the bottom of the game's settings, brings them back.
+        # Madeira 为《GTA V 增强版》（Steam）推荐的设置。
+        # 在游戏设置底部选择“恢复推荐设置”，可恢复以下配置。
         d3d12-caps-log = 2
         d3d12-core-dll = 1
         d3d12-msaa8 = 1
@@ -296,7 +296,7 @@ enum GameRecommendations {
         env.MADEIRA_DEVICE_STATS = 1
         env.MADEIRA_PAD_MODE = hid
         env.MADEIRA_METAL_HUD_MAIN = 1
-        # madeira-bcd's defaults, which this list was tested with (upstream's differ).
+        # 此配置经过测试的 madeira-bcd 默认值（与上游默认值不同）。
         env.MADEIRA_FREE_DELAY_MS = 2000
         env.MADEIRA_CTX_CPU_AREA = 2
         env.MADEIRA_WAIT_CHILDREN = 1
@@ -310,10 +310,10 @@ enum GameRecommendations {
     /// the same orphan-lock reaper mode as the Steam copy (its launcher and
     /// Social Club too).
     static let gta5EnhancedOther = GameRecommendation(
-        id: "gta5e-other", title: "GTA V Enhanced (outside Steam)", version: 2,
+        id: "gta5e-other", title: "GTA V 增强版（非 Steam）", version: 2,
         config: """
-        # Madeira's recommended settings for GTA V Enhanced outside Steam (Rockstar Games Launcher or another store).
-        # Reset to Recommended, at the bottom of the game's settings, brings them back.
+        # Madeira 为《GTA V 增强版》非 Steam 版本（Rockstar Games Launcher 或其他商店）推荐的设置。
+        # 在游戏设置底部选择“恢复推荐设置”，可恢复以下配置。
         vram-mb = 4096
         d3d12-core-dll = 1
         d3d12-typed-uav-load = 1
@@ -331,7 +331,7 @@ enum GameRecommendations {
         env.FEX_VECTORTSOENABLED = 0
         env.MADEIRA_DEVICE_STATS = 1
         env.MADEIRA_EC_HOOK_TRACE = 0
-        # madeira-bcd's defaults, which this list was tested with (upstream's differ).
+        # 此配置经过测试的 madeira-bcd 默认值（与上游默认值不同）。
         env.MADEIRA_FREE_DELAY_MS = 2000
         env.MADEIRA_CTX_CPU_AREA = 2
         env.MADEIRA_WAIT_CHILDREN = 1
@@ -353,10 +353,10 @@ enum GameRecommendations {
     /// create froze it in a cutscene, 15:39). With the game's own graphics at their
     /// lowest it stays under the memory limit on an iPhone 17 Pro Max.
     static let ghostOfTsushima = GameRecommendation(
-        id: "ghost-of-tsushima", title: "Ghost of Tsushima", version: 3,
+        id: "ghost-of-tsushima", title: "对马岛之魂", version: 3,
         config: """
-        # Madeira's recommended settings for Ghost of Tsushima.
-        # Reset to Recommended, at the bottom of the game's settings, brings them back.
+        # Madeira 为《对马岛之魂》推荐的设置。
+        # 在游戏设置底部选择“恢复推荐设置”，可恢复以下配置。
         dxil-tess = 0
         sampler-reduction = 3
         ind-count = 6000
@@ -367,7 +367,7 @@ enum GameRecommendations {
         swap-mb = 4096
         env.MADEIRA_EC_HOOK_TRACE = 0
         env.MADEIRA_THREAD_STACK_SPILL = 1
-        # madeira-bcd's defaults, which this list was tested with (upstream's differ).
+        # 此配置经过测试的 madeira-bcd 默认值（与上游默认值不同）。
         env.MADEIRA_FREE_DELAY_MS = 2000
         env.MADEIRA_CTX_CPU_AREA = 2
         env.MADEIRA_WAIT_CHILDREN = 1
@@ -378,16 +378,16 @@ enum GameRecommendations {
 
     /// God of War (2018) (build 335: 1080p, DualSense input).
     static let godOfWar = GameRecommendation(
-        id: "god-of-war", title: "God of War", version: 1,
+        id: "god-of-war", title: "战神", version: 1,
         config: """
-        # Madeira's recommended settings for God of War.
-        # Reset to Recommended, at the bottom of the game's settings, brings them back.
+        # Madeira 为《战神》推荐的设置。
+        # 在游戏设置底部选择“恢复推荐设置”，可恢复以下配置。
         dxmt = d3d11.mipClampBC=2
         swap-mb = 6144
         swap-min-kb = 1024
         env.WINEDEBUG = err+all,err-virtual,fixme-all
         env.MADEIRA_PAD_MODE = hid
-        # madeira-bcd's defaults, which this list was tested with (upstream's differ).
+        # 此配置经过测试的 madeira-bcd 默认值（与上游默认值不同）。
         env.MADEIRA_FREE_DELAY_MS = 2000
         env.MADEIRA_CTX_CPU_AREA = 2
         env.MADEIRA_WAIT_CHILDREN = 1
@@ -487,10 +487,10 @@ enum GameRecommendations {
     /// one call instead of realpath, which kept it busy on a performance core
     /// in the menu (MADEIRA_SRV_FGETPATH).
     static let horizonZeroDawn = GameRecommendation(
-        id: "horizon-zero-dawn", title: "Horizon Zero Dawn", version: 16,
+        id: "horizon-zero-dawn", title: "地平线：零之曙光", version: 16,
         config: """
-        # Madeira's recommended settings for Horizon Zero Dawn.
-        # Reset to Recommended, at the bottom of the game's settings, brings them back.
+        # Madeira 为《地平线：零之曙光》推荐的设置。
+        # 在游戏设置底部选择“恢复推荐设置”，可恢复以下配置。
         dxbc-register-spaces = 1
         msc-unbounded-retry = 1
         msc-fail-memo = 1
@@ -511,7 +511,7 @@ enum GameRecommendations {
         env.MADEIRA_LOCK_ORPHAN = stamped
         env.MADEIRA_SRV_FGETPATH = 1
         env.WINEDEBUG = fixme-input
-        # madeira-bcd's defaults, which this list was tested with (upstream's differ).
+        # 此配置经过测试的 madeira-bcd 默认值（与上游默认值不同）。
         env.MADEIRA_FREE_DELAY_MS = 2000
         env.MADEIRA_CTX_CPU_AREA = 2
         env.MADEIRA_WAIT_CHILDREN = 1
@@ -530,10 +530,10 @@ enum GameRecommendations {
     /// back: Madeira Dock spun on "Loading Steam" before Thumper. The game lists that
     /// were tested with those defaults keep them. No switches.
     static let standard = GameRecommendation(
-        id: "standard", title: "games without a list of their own", version: 3,
+        id: "standard", title: "没有专用推荐配置的游戏", version: 3,
         config: """
-        # Madeira's recommended settings for a game without a list of its own.
-        # Reset to Recommended, at the bottom of the game's settings, brings them back.
+        # Madeira 为没有专用配置的游戏推荐的设置。
+        # 在游戏设置底部选择“恢复推荐设置”，可恢复以下配置。
         env.MADEIRA_EC_HOOK_TRACE = 0
         """)
 

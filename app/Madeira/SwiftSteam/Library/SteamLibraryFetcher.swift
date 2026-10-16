@@ -106,9 +106,9 @@ class SteamLibraryFetcher {
         while let (id, depotID) = pending.popLast() {
             try Task.checkCancellation()
             if !references.insert("\(id):\(depotID)").inserted { continue }
-            guard references.count <= 1024 else { throw SteamFileError.invalid("Too many shared content references.") }
+            guard references.count <= 1024 else { throw SteamFileError.invalid("共享内容引用过多。") }
             if visited.insert(id).inserted {
-                guard visited.count <= 32 else { throw SteamFileError.invalid("Too many shared content dependencies.") }
+                guard visited.count <= 32 else { throw SteamFileError.invalid("共享内容依赖过多。") }
                 owners[id] = try await fetchAppInfo(appID: id)
             }
             if let source = owners[id]?.depots.first(where: { $0.depotID == depotID }),
@@ -130,7 +130,7 @@ class SteamLibraryFetcher {
         let resolved = app.inheritDepots(from: owners)
         let missing = app.depots.filter { eligible($0) && $0.fromApp != nil && $0.publicManifestID == nil }
         SteamLog.event("[steam-shared] app=\(appID) owners=\(visited.count - 1) resolved=\(resolved) missing=\(missing.count)")
-        guard missing.isEmpty else { throw SteamFileError.invalid("Steam did not provide required shared content metadata. Refresh and retry the download.") }
+        guard missing.isEmpty else { throw SteamFileError.invalid("Steam 未提供所需的共享内容元数据。请刷新后重试下载。") }
         // The direct owner of each selected shared depot, for its install
         // record. Metadata only; Valve still decides access and launch readiness.
         for id in Set(app.installDepots().compactMap(\.fromApp)).subtracting([appID]).sorted() {

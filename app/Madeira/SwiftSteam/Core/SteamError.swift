@@ -57,53 +57,53 @@ enum SteamError: LocalizedError, Equatable {
         case .authenticationFailed(let reason):
             return reason
         case .invalidCredentials:
-            return "The account name or password is incorrect."
+            return "账户名称或密码不正确。"
         case .rateLimited:
-            return "Too many attempts. Please try again later."
+            return "尝试次数过多。请稍后重试。"
         case .accountDisabled:
-            return "This Steam account has been disabled"
+            return "此 Steam 账户已被停用"
         case .rsaKeyFetchFailed:
-            return "Failed to fetch RSA public key for password encryption"
+            return "无法获取用于加密密码的 RSA 公钥"
         case .qrCodeExpired:
-            return "QR code has expired. Please try again."
+            return "二维码已过期。请重试。"
         case .authSessionExpired:
-            return "The sign-in request expired. Start again."
+            return "登录请求已过期。请重新开始。"
         case .protobufError(let detail):
-            return "Protocol buffer error: \(detail)"
+            return "Protocol Buffers 错误：\(detail)"
         case .noServersAvailable:
-            return "No Steam servers are available."
+            return "没有可用的 Steam 服务器。"
         case .connectionFailed(let reason):
-            return "Connection failed: \(reason)"
+            return "连接失败：\(reason)"
         case .connectionTimeout:
-            return "Steam did not respond in time. Check your internet connection and try again."
+            return "Steam 响应超时。请检查网络连接后重试。"
         case .disconnected:
-            return "Disconnected from Steam."
+            return "已与 Steam 断开连接。"
         case .logonDenied(let code):
             return SteamError.signInExpiredCodes.contains(code)
-                ? "Your Steam sign-in is no longer valid. Sign in again."
-                : "Steam refused the connection (code \(code)). Try again later."
+                ? "Steam 登录已失效。请重新登录。"
+                : "Steam 拒绝连接（代码 \(code)）。请稍后重试。"
         case .invalidMessage:
-            return "Received an invalid message from Steam."
+            return "收到了来自 Steam 的无效消息。"
         case .appInfoNotFound(let appID):
-            return "Steam has no information for app \(appID)."
+            return "Steam 没有应用 \(appID) 的信息。"
         case .depotNotFound:
-            return "Steam has no Windows download for this game."
+            return "Steam 没有此游戏的 Windows 下载版本。"
         case .manifestFetchFailed(let reason):
-            return "Could not read the game's file list: \(reason)"
+            return "无法读取游戏文件列表：\(reason)"
         case .chunkDownloadFailed(let reason):
-            return "Download failed: \(reason)"
+            return "下载失败：\(reason)"
         case .decryptionFailed(let reason):
-            return "Decryption failed: \(reason)"
+            return "解密失败：\(reason)"
         case .decompressionFailed:
-            return "Failed to decompress downloaded data."
+            return "无法解压下载的数据。"
         case .chunkDecodeFailed(let format):
-            return "Part of the game could not be decoded (\(format)). Try again; downloaded parts are kept."
+            return "无法解码部分游戏内容（\(format)）。请重试；已下载的部分会保留。"
         case .checksumMismatch:
-            return "A downloaded part failed its checksum."
+            return "某个下载分块未通过校验。"
         case .depotKeyNotFound:
-            return "Steam did not allow this account to download the game's files. Check that the account owns it."
+            return "Steam 不允许此账户下载游戏文件。请确认账户拥有此游戏。"
         case .insufficientDiskSpace(let needed, let available):
-            return String(format: "Not enough free space: the download needs %.1f GB and %.1f GB is available.",
+            return String(format: "可用空间不足：下载需要 %.1f GB，目前可用 %.1f GB。",
                           Double(needed) / 1_000_000_000, Double(available) / 1_000_000_000)
         }
     }

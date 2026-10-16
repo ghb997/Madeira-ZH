@@ -24,7 +24,7 @@ struct SteamKeyValues {
     private var position = 0
     private var tokens = 0
     init(_ data: Data) throws {
-        guard data.count <= 4 * 1024 * 1024 else { throw SteamFileError.invalid("Steam metadata is too large.") }
+        guard data.count <= 4 * 1024 * 1024 else { throw SteamFileError.invalid("Steam 元数据过大。") }
         bytes = Array(data)
         if bytes.starts(with: [0xef, 0xbb, 0xbf]) { position = 3 }
     }
@@ -40,7 +40,7 @@ struct SteamKeyValues {
         }
         guard position < bytes.count else { return nil }
         tokens += 1
-        guard tokens <= 100_000 else { throw SteamFileError.invalid("Steam metadata has too many entries.") }
+        guard tokens <= 100_000 else { throw SteamFileError.invalid("Steam 元数据条目过多。") }
         let first = bytes[position]; position += 1
         if first == 123 { return .open }; if first == 125 { return .close }
         var value: [UInt8] = []
@@ -51,28 +51,28 @@ struct SteamKeyValues {
                 if byte == 92, position < bytes.count, bytes[position] == 34 || bytes[position] == 92 {
                     value.append(bytes[position]); position += 1
                 } else { value.append(byte) }
-                guard value.count <= 16_384 else { throw SteamFileError.invalid("Steam metadata contains an oversized value.") }
+                guard value.count <= 16_384 else { throw SteamFileError.invalid("Steam 元数据包含过大的值。") }
             }
-            throw SteamFileError.invalid("Steam metadata is incomplete. Refresh after the download finishes.")
+            throw SteamFileError.invalid("Steam 元数据不完整。请在下载完成后刷新。")
         }
         value.append(first)
         while position < bytes.count, bytes[position] > 32, bytes[position] != 123, bytes[position] != 125 {
             value.append(bytes[position]); position += 1
-            guard value.count <= 16_384 else { throw SteamFileError.invalid("Steam metadata contains an oversized value.") }
+            guard value.count <= 16_384 else { throw SteamFileError.invalid("Steam 元数据包含过大的值。") }
         }
         return .word(String(decoding: value, as: UTF8.self))
     }
     mutating func read() throws -> SteamValue { .object(try object(depth: 0)) }
     private mutating func object(depth: Int) throws -> [String: SteamValue] {
-        guard depth < 32 else { throw SteamFileError.invalid("Steam metadata is nested too deeply.") }
+        guard depth < 32 else { throw SteamFileError.invalid("Steam 元数据嵌套过深。") }
         var result: [String: SteamValue] = [:]
         while let key = try token() {
             if key == .close {
-                guard depth > 0 else { throw SteamFileError.invalid("Steam metadata has an unexpected closing brace.") }
+                guard depth > 0 else { throw SteamFileError.invalid("Steam 元数据包含意外的右花括号。") }
                 return result
             }
             guard case .word(let name) = key, let value = try token(), value != .close else {
-                throw SteamFileError.invalid("Steam metadata is incomplete. Try refreshing it.")
+                throw SteamFileError.invalid("Steam 元数据不完整。请尝试刷新。")
             }
             switch value {
             case .open: result[name.lowercased()] = .object(try object(depth: depth + 1))
@@ -80,7 +80,7 @@ struct SteamKeyValues {
             case .close: break
             }
         }
-        guard depth == 0 else { throw SteamFileError.invalid("Steam metadata is incomplete. Try refreshing it.") }
+        guard depth == 0 else { throw SteamFileError.invalid("Steam 元数据不完整。请尝试刷新。") }
         return result
     }
 }

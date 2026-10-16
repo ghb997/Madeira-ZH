@@ -16,13 +16,13 @@ enum StikJITHelper {
         var errorDescription: String? {
             switch self {
             case .scriptMissing:
-                return "Madeira's JIT script is missing from this installation. Reinstall Madeira."
+                return "当前安装缺少 Madeira 的 JIT 脚本。请重新安装 Madeira。"
             case .invalidRequest:
-                return "Madeira could not create the StikDebug request."
+                return "Madeira 无法创建 StikDebug 请求。"
             case .unavailable:
-                return "StikDebug is not installed. Install it, or configure Built-in StikJIT."
+                return "尚未安装 StikDebug。请安装它，或配置内置 StikJIT。"
             case .timedOut:
-                return "StikDebug did not attach to Madeira within 90 seconds. Check its pairing file and LocalDevVPN, then try again."
+                return "StikDebug 未能在 90 秒内附加到 Madeira。请检查配对文件和 LocalDevVPN 后重试。"
             }
         }
     }

@@ -68,7 +68,7 @@ struct SteamCloudListing: Equatable, Sendable {
                     }
                 }
                 raw.append((file, prefixIndex))
-                if raw.count > 20_000 { throw SteamFileError.invalid("Too many Steam Cloud files.") }
+                if raw.count > 20_000 { throw SteamFileError.invalid("Steam 云存档文件过多。") }
             default: try decoder.skip(wireType: tag.wireType)
             }
         }
@@ -441,25 +441,25 @@ enum SteamCloudTransfer {
     /// Fetches one cloud file's bytes and checks them against the SHA-1 the
     /// cloud's own list gives. Throws rather than return anything unverified.
     static func fetch(_ info: SteamCloudDownloadInfo, expectedSHA: Data) async throws -> Data {
-        guard !info.encrypted else { throw SteamFileError.invalid("This Steam Cloud file is encrypted, which is not supported.") }
+        guard !info.encrypted else { throw SteamFileError.invalid("此 Steam 云存档文件已加密，目前尚不支持。") }
         guard let url = info.url, info.fileSize <= UInt64(maxFileBytes), info.rawSize <= UInt64(maxFileBytes) else {
-            throw SteamFileError.invalid("Steam gave no usable address for this Steam Cloud file.")
+            throw SteamFileError.invalid("Steam 未提供此云存档文件的有效地址。")
         }
         var request = URLRequest(url: url)
         for header in info.headers { request.setValue(header.value, forHTTPHeaderField: header.name) }
         let (body, response) = try await http.data(for: request)
         guard (response as? HTTPURLResponse)?.statusCode == 200 else {
-            throw SteamFileError.invalid("Steam Cloud download failed (HTTP \((response as? HTTPURLResponse)?.statusCode ?? 0)).")
+            throw SteamFileError.invalid("Steam 云存档下载失败（HTTP \((response as? HTTPURLResponse)?.statusCode ?? 0)）。")
         }
         var file = body
         if info.fileSize != info.rawSize || (body.count != Int(info.rawSize) && body.starts(with: [0x50, 0x4b, 0x03, 0x04])) {
             guard let unpacked = unzipFirstEntry(body, rawSize: Int(info.rawSize)) else {
-                throw SteamFileError.invalid("A Steam Cloud file could not be unpacked.")
+                throw SteamFileError.invalid("无法解压某个 Steam 云存档文件。")
             }
             file = unpacked
         }
         guard Data(Insecure.SHA1.hash(data: file)) == expectedSHA else {
-            throw SteamFileError.invalid("A Steam Cloud file did not match its checksum.")
+            throw SteamFileError.invalid("某个 Steam 云存档文件的校验和不匹配。")
         }
         return file
     }
@@ -600,7 +600,7 @@ struct SteamCloudUploadBlock: Sendable {
                     }
                 }
                 blocks.append(block)
-                if blocks.count > 4096 { throw SteamFileError.invalid("Steam asked for too many upload parts.") }
+                if blocks.count > 4096 { throw SteamFileError.invalid("Steam 要求的上传分块过多。") }
             default: try decoder.skip(wireType: tag.wireType)
             }
         }
@@ -620,12 +620,12 @@ extension SteamCloudTransfer {
     static func send(_ file: Data, blocks: [SteamCloudUploadBlock]) async throws -> [Int] {
         var statuses: [Int] = []
         for block in blocks {
-            guard let url = block.url else { throw SteamFileError.invalid("Steam gave no usable address for an upload.") }
+            guard let url = block.url else { throw SteamFileError.invalid("Steam 未提供有效的上传地址。") }
             var body = block.explicitBody
             if body.isEmpty {
                 let start = Int(min(block.offset, UInt64(file.count)))
                 let end = Int(min(block.offset + block.length, UInt64(file.count)))
-                guard end - start == Int(block.length) else { throw SteamFileError.invalid("Steam asked for a part outside the file.") }
+                guard end - start == Int(block.length) else { throw SteamFileError.invalid("Steam 请求的分块超出了文件范围。") }
                 body = file.subdata(in: start..<end)
             }
             var request = URLRequest(url: url)
@@ -634,7 +634,7 @@ extension SteamCloudTransfer {
             let (_, response) = try await uploadSession.upload(for: request, from: body)
             let status = (response as? HTTPURLResponse)?.statusCode ?? 0
             statuses.append(status)
-            guard (200..<300).contains(status) else { throw SteamFileError.invalid("Steam Cloud upload failed (HTTP \(status)).") }
+            guard (200..<300).contains(status) else { throw SteamFileError.invalid("Steam 云存档上传失败（HTTP \(status)）。") }
         }
         return statuses
     }

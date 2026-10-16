@@ -9,7 +9,7 @@ import UIKit
 // own layouts ("Custom Layout 1", "Custom Layout 2", ...) are kept app-wide in
 // Documents/madeira-control-presets.json, beside madeira-controls.json, so a
 // device backup carries them. Built-ins ship in code and can be loaded but
-// never changed: there is one, a full XInput layout named "Xbox controller".
+// never changed: there is one, a full XInput layout named "Xbox 控制器".
 //
 // madeira-controls.json stays the working copy the overlay draws; it records
 // which layout it was loaded from (`TouchControlsModel.layoutID`) so edits made
@@ -17,7 +17,7 @@ import UIKit
 //
 // The layout menu is offered in two places: the landscape overlay's top bar
 // (`ControlLayoutMenu`) and, in a library session, where LibraryHUD replaces
-// that bar, as a "Controller layout" row of the in-game Session menu (the same
+// that bar, as a "控制器布局" row of the in-game Session menu (the same
 // view, `.row` style). A library game remembers its layout (`LibraryEntry.
 // controlLayout`); other games and the overlay outside the library keep the
 // one shared working copy.
@@ -62,7 +62,7 @@ struct ControlPresetScreen: Equatable {
 
 enum ControlPresetLayout {
     static let xboxID = "builtin.xbox"
-    static let xboxName = "Xbox controller"
+    static let xboxName = "Xbox 控制器"
     /// Mirrors `TouchControlsModel.baseDiameter`.
     static let baseDiameter = 64.0
 
@@ -218,8 +218,8 @@ struct ControlPresetStore: Equatable {
     /// "Custom Layout N", the lowest N not taken.
     func nextCustomName() -> String {
         var n = 1
-        while named("Custom Layout \(n)") != nil { n += 1 }
-        return "Custom Layout \(n)"
+        while named("自定义布局 \(n)") != nil { n += 1 }
+        return "自定义布局 \(n)"
     }
 
     enum SaveResult: Equatable {
@@ -419,7 +419,7 @@ final class ControlPresetsModel: ObservableObject {
         return true
     }
 
-    /// "Create new layout": an empty custom layout, made active, opened in the editor.
+    /// "创建新布局": an empty custom layout, made active, opened in the editor.
     @discardableResult func createLayout() -> Bool {
         guard !readOnly else { return false }
         var s = store
@@ -478,7 +478,7 @@ final class ControlPresetsModel: ObservableObject {
 // MARK: - Layout menu (landscape overlay, library session menu)
 
 /// The layout menu: the controller built-in, the user's custom layouts,
-/// "Create new layout" (opens the editor on an empty layout) and deleting the
+/// "创建新布局" (opens the editor on an empty layout) and deleting the
 /// active custom layout. Shown only while touch controls are on. `.glass` is
 /// the overlay's round top-bar button; `.row` is a labelled row of the library
 /// session's Session menu.
@@ -505,41 +505,41 @@ struct ControlLayoutMenu: View {
     var body: some View {
         Group {
             if style == .row {
-                LabeledContent("Controller layout") { menu }
+                LabeledContent("控制器布局") { menu }
             } else {
                 menu
             }
         }
-        .alert("Keep the current controls?", isPresented: shown($pending)) {
+        .alert("保留当前控件？", isPresented: shown($pending)) {
             if !presets.readOnly {
-                Button("Keep as \u{201C}\(presets.store.nextCustomName())\u{201D}") {
+                Button("保存为“\(presets.store.nextCustomName())”") {
                     let choice = pending
                     pending = nil
                     presets.keepCurrent()
                     perform(choice)
                 }
             }
-            Button("Replace", role: .destructive) {
+            Button("替换", role: .destructive) {
                 let choice = pending
                 pending = nil
                 perform(choice)
             }
-            Button("Cancel", role: .cancel) { pending = nil }
+            Button("取消", role: .cancel) { pending = nil }
         } message: {
-            Text("The controls on screen are not saved in a layout.")
+            Text("屏幕上的控件尚未保存到布局。")
         }
-        .alert("Delete \u{201C}\(confirmDelete?.name ?? "")\u{201D}?", isPresented: shown($confirmDelete)) {
-            Button("Delete", role: .destructive) {
+        .alert("删除“\(confirmDelete?.name ?? "")”？", isPresented: shown($confirmDelete)) {
+            Button("删除", role: .destructive) {
                 if let p = confirmDelete, presets.delete(p.id) { didChoose?(false) }
                 confirmDelete = nil
             }
-            Button("Cancel", role: .cancel) { confirmDelete = nil }
+            Button("取消", role: .cancel) { confirmDelete = nil }
         }
     }
 
     private var menu: some View {
         Menu {
-            Section("Controller layout") {
+            Section("控制器布局") {
                 ForEach(presets.available) { p in
                     Button { request(.load(p.id)) } label: {
                         if m.layoutID == p.id { Label(p.name, systemImage: "checkmark") }
@@ -549,10 +549,10 @@ struct ControlLayoutMenu: View {
                 }
             }
             if !presets.readOnly {
-                Button("Create new layout", systemImage: "plus") { request(.create) }
+                Button("创建新布局", systemImage: "plus") { request(.create) }
             }
             if let a = presets.active, !ControlPresetStore.isBuiltIn(a.id), !presets.readOnly {
-                Button("Delete \u{201C}\(a.name)\u{201D}", systemImage: "trash", role: .destructive) {
+                Button("删除“\(a.name)”", systemImage: "trash", role: .destructive) {
                     confirmDelete = a
                 }
             }
@@ -567,12 +567,12 @@ struct ControlLayoutMenu: View {
                     .background(GlassShape(circle: true))
             case .row:
                 HStack(spacing: 4) {
-                    Text(presets.active?.name ?? "Custom")
+                    Text(presets.active?.name ?? "自定义")
                     Image(systemName: "chevron.up.chevron.down").font(.caption)
                 }
             }
         }
-        .accessibilityLabel("Controller layout")
+        .accessibilityLabel("控制器布局")
     }
 
     private func shown<T>(_ b: Binding<T?>) -> Binding<Bool> {

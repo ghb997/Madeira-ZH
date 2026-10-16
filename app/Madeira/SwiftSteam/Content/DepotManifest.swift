@@ -48,7 +48,7 @@ struct DepotManifest {
     /// filenames may be base64(AES-CBC depot-key) — pass depotKey to decode them.
     static func parse(depotID: UInt32, manifestGID: UInt64, data: Data, depotKey: Data? = nil) throws -> DepotManifest {
         guard data.count >= 4 else {
-            throw SteamError.manifestFetchFailed("Manifest data too small")
+            throw SteamError.manifestFetchFailed("清单数据过短")
         }
 
         // ContentManifestPayload starts with tag 0x0a (field 1, length-delimited).

@@ -56,8 +56,8 @@ class SteamQRAuth {
         let response = try CAuthentication_BeginAuthSessionViaQR_Response.deserialize(from: responseData)
 
         guard !response.challengeURL.isEmpty else {
-            authState = .failed("No challenge URL received")
-            throw SteamError.authenticationFailed("Empty challenge URL from Steam")
+            authState = .failed("未收到验证链接")
+            throw SteamError.authenticationFailed("Steam 返回了空验证链接")
         }
 
         clientID = response.clientID

@@ -1930,7 +1930,7 @@ final class DirectCursorOverlay {
     }
 }
 
-/// "Right stick controls mouse" (InputSettings.padRightStickMouse, default
+/// "右摇杆控制鼠标" (InputSettings.padRightStickMouse, default
 /// OFF): a paired controller's right stick moves the mouse at a velocity, for
 /// programs with no controller support of their own. A program that reads the
 /// controller itself (XInput or DirectInput) already gets the right stick, and
@@ -2054,7 +2054,7 @@ struct HardwareInputSettings: View {
                         Image(systemName: "computermouse")
                             .font(.system(size: 13))
                             .foregroundColor(.secondary)
-                            .accessibilityLabel("Mouse sensitivity")
+                            .accessibilityLabel("鼠标灵敏度")
                         Slider(value: $input.sensMouse, in: 0.10...8.0)
                         Text(String(format: "%.2f", input.sensMouse))
                             .font(.system(size: 12, design: .monospaced))
@@ -2065,7 +2065,7 @@ struct HardwareInputSettings: View {
                 }
                 if open && pad.controllerConnected {
                     Toggle(isOn: $input.padRightStickMouse) {
-                        Label("Right stick controls mouse", systemImage: "gamecontroller")
+                        Label("右摇杆控制鼠标", systemImage: "gamecontroller")
                             .font(.system(size: 13))
                     }
                 }
@@ -2095,15 +2095,15 @@ struct HardwareInputSettings: View {
                 .cornerRadius(6)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(hw.pointerLocked ? "Unlock pointer (Ctrl+Alt+P)" : "Lock pointer (Ctrl+Alt+P)")
+        .accessibilityLabel(hw.pointerLocked ? "解锁指针（Ctrl+Alt+P）" : "锁定指针（Ctrl+Alt+P）")
     }
 
     /// The one thing the app cannot do for the user: on iPhone every pointer
     /// device is routed through AssistiveTouch.
     private var hint: some View {
         HStack(alignment: .top, spacing: 8) {
-            Text("Mouse detected. iPhone needs AssistiveTouch: "
-                 + "Settings > Accessibility > Touch > AssistiveTouch > On, then Devices")
+            Text("已检测到鼠标。iPhone 需要开启辅助触控："
+                 + "设置 > 辅助功能 > 触控 > 辅助触控 > 开启，然后选择“设备”")
                 .font(.system(size: 12))
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -2117,7 +2117,7 @@ struct HardwareInputSettings: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Dismiss")
+            .accessibilityLabel("关闭")
         }
     }
 }

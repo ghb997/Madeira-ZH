@@ -295,14 +295,14 @@ enum JITShortcutFile {
             URLQueryItem(name: "x-error", value: "madeira://jit-network/error"),
             URLQueryItem(name: "x-cancel", value: "madeira://jit-network/cancel")
         ]
-        guard let url = c.url else { completion(.failed("bad shortcut URL")); return }
+        guard let url = c.url else { completion(.failed("快捷指令 URL 无效")); return }
         LogStore.shared.log("[jit-shortcut] run input=\(input)")
         waiting = completion
         timeout = Timer.scheduledTimer(withTimeInterval: 60, repeats: false) { [weak self] _ in
-            MainActor.assumeIsolated { self?.finish(.failed("the shortcut did not return within 60 s")) }
+            MainActor.assumeIsolated { self?.finish(.failed("快捷指令未在 60 秒内返回")) }
         }
         UIApplication.shared.open(url) { [weak self] opened in
-            if !opened { MainActor.assumeIsolated { self?.finish(.failed("Shortcuts could not be opened")) } }
+            if !opened { MainActor.assumeIsolated { self?.finish(.failed("无法打开“快捷指令”")) } }
         }
     }
 
@@ -314,8 +314,8 @@ enum JITShortcutFile {
         let value = { (name: String) in query.first { $0.name == name }?.value ?? "" }
         switch url.path {
         case "/success": finish(.done(value("result")))
-        case "/error":   finish(.failed(value("errorMessage").isEmpty ? "the shortcut failed" : value("errorMessage")))
-        default:         finish(.failed("the shortcut was cancelled"))
+        case "/error":   finish(.failed(value("errorMessage").isEmpty ? "快捷指令运行失败" : value("errorMessage")))
+        default:         finish(.failed("快捷指令已取消"))
         }
         return true
     }

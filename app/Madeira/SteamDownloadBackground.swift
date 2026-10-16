@@ -83,7 +83,7 @@ import UserNotifications
         requestNotificationPermission()
         if #available(iOS 26.0, *), Self.continuedEnabled { submitContinued() }
         if #available(iOS 26.0, *), let task = continued as? BGContinuedProcessingTask {
-            task.updateTitle("Downloading \(name)", subtitle: "Steam download in Madeira")
+            task.updateTitle("正在下载 \(name)", subtitle: "Madeira 中的 Steam 下载")
         }
         if isBackground { beginGrace() }
     }
@@ -102,8 +102,8 @@ import UserNotifications
     func downloadEnded(appID: Int, name: String, outcome: Outcome, queueEmpty: Bool) {
         if isBackground {
             switch outcome {
-            case .completed: notify("\(name) is ready to play", body: "The Steam download finished.")
-            case .failed(let reason): notify("\(name) download stopped", body: reason)
+            case .completed: notify("\(name) 已可游玩", body: "Steam 下载已完成。")
+            case .failed(let reason): notify("\(name) 下载已停止", body: reason)
             case .paused: break
             }
         }
@@ -125,8 +125,8 @@ import UserNotifications
             guard ok else { log("register refused id-suffix=queue"); return }
             registered = identifier
         }
-        let request = BGContinuedProcessingTaskRequest(identifier: identifier, title: "Downloading \(currentName)",
-                                                       subtitle: "Steam download in Madeira")
+        let request = BGContinuedProcessingTaskRequest(identifier: identifier, title: "正在下载 \(currentName)",
+                                                       subtitle: "Madeira 中的 Steam 下载")
         request.strategy = .fail
         do {
             try BGTaskScheduler.shared.submit(request)
@@ -146,7 +146,7 @@ import UserNotifications
             DispatchQueue.main.async {
                 self?.log("continued-processing expired; pausing downloads")
                 self?.library?.pauseForBackground()
-                self?.notify("Download paused", body: "Open Madeira to continue downloading.")
+                self?.notify("下载已暂停", body: "打开 Madeira 以继续下载。")
                 self?.finishContinued(success: false)
             }
         }
@@ -173,7 +173,7 @@ import UserNotifications
                 if self.continued == nil {
                     self.log("background time over; pausing downloads")
                     self.library?.pauseForBackground()
-                    self.notify("Download paused", body: "Open Madeira to continue downloading.")
+                    self.notify("下载已暂停", body: "打开 Madeira 以继续下载。")
                 }
                 self.endGrace()
             }

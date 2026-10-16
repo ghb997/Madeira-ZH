@@ -4,6 +4,10 @@ import SwiftUI
 @main
 struct MadeiraApp: App {
     init() {
+        // Prefer Simplified Chinese in Wine's own translated resources. Explicit
+        // environment settings and per-game madeira.cfg overrides still win.
+        setenv("LANG", "zh_CN.UTF-8", 0)
+        setenv("LC_ALL", "zh_CN.UTF-8", 0)
         // madeira-bcd: the Metal Performance HUD's performance insights (the
         // notes that stack up left of its panel: shader compiles, similar render
         // passes, blit encoders) cover the game. Off unless madeira.cfg says
@@ -17,6 +21,7 @@ struct MadeiraApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(\.locale, Locale(identifier: "zh_Hans_CN"))
                 .modifier(ClaimGamepadEvents())
                 .onAppear {
                     GamepadInput.shared.start()

@@ -114,7 +114,7 @@ enum MadeiraConfig {
             }
             if let text {
                 let merged = (text.hasSuffix("\n") ? text : text + "\n")
-                    + "# madeira-bcd: the game's own file (\(profileURL.lastPathComponent)), after the lines above so it wins\n"
+                    + "# madeira-bcd：游戏专用文件（\(profileURL.lastPathComponent)），位于上方配置之后，因此优先生效\n"
                     + profileText
                 try FileManager.default.createDirectory(at: u.deletingLastPathComponent(), withIntermediateDirectories: true)
                 try (merged.hasSuffix("\n") ? merged : merged + "\n").write(to: u, atomically: true, encoding: .utf8)
@@ -190,10 +190,10 @@ enum MadeiraConfig {
     @discardableResult
     static func migrateLegacy(log: (String) -> Void) -> [String] {
         guard let d = documents, let u = url, !present else { return [] }
-        var lines = ["# Madeira configuration (ml1095): one file for every switch.",
-                     "# key = value; lines starting with # are comments; the last line wins.",
-                     "# Keys are the old file names without 'madeira-' and '.txt'.",
-                     "# Environment exports: env.NAME = value. DXMT options: dxmt = a=b;c=d.",
+        var lines = ["# Madeira 配置（ml1095）：所有开关集中保存在此文件中。",
+                     "# 格式为 key = value；以 # 开头的行为注释；重复配置以最后一行为准。",
+                     "# 配置键为旧文件名去除 'madeira-' 前缀和 '.txt' 后缀。",
+                     "# 环境变量：env.NAME = value。DXMT 选项：dxmt = a=b;c=d。",
                      ""]
         var migrated: [String] = []
         for key in legacyKeys {

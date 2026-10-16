@@ -186,7 +186,7 @@ struct FPSOverlay: View {
                         .frame(width: 56, alignment: .trailing)
                     Text("|")
                         .foregroundColor(.secondary)
-                    Text("Present:")
+                    Text("呈现：")
                         .foregroundColor(.secondary)
                     Text("\(presentCount)")
                         .foregroundColor(.primary)
@@ -262,7 +262,7 @@ struct FPSOverlay: View {
     /// flashes for a second so a tap is visibly taken.
     @State private var captureFlash = false
     private var capturePill: some View {
-        Text("CAP")
+        Text("截帧")
             .foregroundColor(captureFlash ? .black : .cyan)
             .padding(.horizontal, 5)
             .padding(.vertical, 1)
@@ -282,7 +282,7 @@ struct FPSOverlay: View {
     /// budget for gameplay. Turn it off once in game. Green = on.
     @State private var ecoOn = madeira_get_eco() != 0
     private var ecoPill: some View {
-        Text("ECO")
+        Text("节能")
             .foregroundColor(ecoOn ? .black : .green)
             .padding(.horizontal, 5)
             .padding(.vertical, 1)
@@ -322,8 +322,8 @@ struct FPSOverlay: View {
         case 1: return "60"
         case 3: return "30"
         case 4: return "40"
-        case 0: return "MAX(\(UIScreen.main.maximumFramesPerSecond))"
-        default: return "RAW"
+        case 0: return "最高(\(UIScreen.main.maximumFramesPerSecond))"
+        default: return "不限"
         }
     }
 

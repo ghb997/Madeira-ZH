@@ -92,27 +92,26 @@ extension GameRecommendations {
 
     /// The line under Reset to Recommended. `desktop`: the Desktop entry's page.
     static func note(_ rec: GameRecommendation?, desktop: Bool = false) -> String {
-        guard let rec else { return "Madeira has no recommended settings for this game yet; resetting empties this game's config." }
+        guard let rec else { return "Madeira 尚未提供此游戏的推荐设置；重置将清空此游戏的配置。" }
         let lines = GameProfile.parse(rec.config).count
         if rec.id == standard.id {
-            return (desktop ? "Madeira recommends its standard settings for the Desktop: "
-                            : "Madeira has no list for this game yet, so it recommends its standard settings: ")
-                + "\(lines) config line\(lines == 1 ? "" : "s") (the emulator's code-patch report off, without which many games "
-                + "close at start). Resetting replaces "
-                + (desktop ? "the Desktop's" : "this game's") + " config with them."
+            return (desktop ? "Madeira 建议桌面使用标准设置："
+                            : "Madeira 尚未提供此游戏的专用配置，建议使用标准设置：")
+                + "\(lines) 行配置（关闭模拟器的代码补丁报告，否则许多游戏会在启动时退出）。重置会用这些设置替换"
+                + (desktop ? "桌面" : "此游戏") + "的配置。"
         }
         let summary = rec.switchSummary
         let switches = summary.isEmpty ? "" : "; " + summary
-        return "Madeira's recommended settings for \(rec.title): \(lines) config lines\(switches). Resetting replaces this game's config and these switches with them."
+        return "Madeira 为 \(rec.title) 推荐的设置：\(lines) 行配置\(switches)。重置会用这些设置替换此游戏的配置和开关。"
     }
 
     /// The question before a reset.
     static func question(_ rec: GameRecommendation?, desktop: Bool = false) -> String {
-        guard let rec else { return "Madeira has no recommended settings for this game yet. Empty this game's config?" }
+        guard let rec else { return "Madeira 尚未提供此游戏的推荐设置。要清空此游戏的配置吗？" }
         if rec.id == standard.id {
-            return "Replace \(desktop ? "the Desktop's" : "this game's") config with Madeira's standard settings? Changes you made to it are lost."
+            return "将\(desktop ? "桌面" : "此游戏")的配置替换为 Madeira 的标准设置？你所做的更改将会丢失。"
         }
-        return "Replace this game's config and switches with Madeira's recommended settings for \(rec.title)? Changes you made to them are lost."
+        return "将此游戏的配置和开关替换为 Madeira 为 \(rec.title) 推荐的设置？你所做的更改将会丢失。"
     }
 
     // MARK: -

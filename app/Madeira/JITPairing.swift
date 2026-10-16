@@ -81,7 +81,7 @@ import UserNotifications
         guard Self.isSupported, !active, session == nil else { return }
         var error: UnsafeMutablePointer<CChar>?
         guard let session = madeira_rppairing_new(Self.hostName, &error) else {
-            fail(Self.take(error) ?? "Madeira could not open its pairing port.")
+            fail(Self.take(error) ?? "Madeira 无法打开配对端口。")
             return
         }
         self.session = session
@@ -96,7 +96,7 @@ import UserNotifications
         }
         beginBackground()
         deadline = Timer.scheduledTimer(withTimeInterval: Self.timeout, repeats: false) { _ in
-            MainActor.assumeIsolated { OnDevicePairing.shared.cancel(reason: "Pairing timed out. Try again when you are ready to pair from Settings.") }
+            MainActor.assumeIsolated { OnDevicePairing.shared.cancel(reason: "配对超时。准备好从系统“设置”中配对后，请重试。") }
         }
 
         DispatchQueue.global(qos: .userInitiated).async {
@@ -133,11 +133,11 @@ import UserNotifications
         phase = .pin(pin)
         log("code shown")
         if #available(iOS 26.0, *), let task = continued as? BGContinuedProcessingTask {
-            task.updateTitle("Pairing code \(pin)", subtitle: "Enter it on this \(Self.deviceKind) to pair with Madeira")
+            task.updateTitle("配对码 \(pin)", subtitle: "在这台 \(Self.deviceKind) 上输入此代码，与 Madeira 配对")
             task.progress.completedUnitCount = 1
         }
         if UIApplication.shared.applicationState != .active {
-            notify("Madeira pairing code: \(pin)", body: "Enter this code on your \(Self.deviceKind) to finish pairing.")
+            notify("Madeira 配对码：\(pin)", body: "在你的 \(Self.deviceKind) 上输入此代码以完成配对。")
         }
     }
 
@@ -152,19 +152,19 @@ import UserNotifications
             do {
                 guard let data else { throw NSError(domain: "MadeiraJIT", code: 20) }
                 try JITCoordinator.shared.storeOnDevicePairing(data)
-                phase = .paired(device: device ?? "this \(Self.deviceKind)")
+                phase = .paired(device: device ?? "这台 \(Self.deviceKind)")
                 log("paired")
                 if UIApplication.shared.applicationState != .active {
-                    notify("Paired with Madeira", body: "Return to Madeira to finish setting up JIT.")
+                    notify("已与 Madeira 配对", body: "返回 Madeira 以完成 JIT 设置。")
                 }
                 endBackground(success: true)
             } catch {
-                fail("Pairing finished, but Madeira could not save the pairing file.")
+                fail("配对已完成，但 Madeira 无法保存配对文件。")
             }
         case 2:
             endBackground(success: false)
         default:
-            fail(message.map { "Pairing failed: \($0)" } ?? "Pairing failed. Try again.")
+            fail(message.map { "配对失败：\($0)" } ?? "配对失败，请重试。")
         }
     }
 
@@ -218,8 +218,8 @@ import UserNotifications
         guard active else { return }
         log("advertising failed error=\(error)")
         fail(error == DNSServiceErrorType(kDNSServiceErr_PolicyDenied)
-             ? "Madeira needs Local Network access to pair. Allow it in Settings › Apps › Madeira, then try again."
-             : "Madeira could not announce itself on the local network. Check that Wi-Fi is on, then try again.")
+             ? "Madeira 需要访问本地网络才能配对。请在系统“设置”›“App”›“Madeira”中允许访问后重试。"
+             : "Madeira 无法在本地网络上广播配对服务。请确认 Wi-Fi 已开启后重试。")
     }
 
     private func stopAdvertising() {
@@ -241,7 +241,7 @@ import UserNotifications
             MainActor.assumeIsolated {
                 let pairing = OnDevicePairing.shared
                 if pairing.continued == nil && pairing.active {
-                    pairing.cancel(reason: "iOS stopped Madeira in the background before pairing finished. Try again, and pair from Settings straight away.")
+                    pairing.cancel(reason: "iOS 在配对完成前停止了后台的 Madeira。请重试，并立即前往系统“设置”完成配对。")
                 }
                 pairing.endGrace()
             }
@@ -260,8 +260,8 @@ import UserNotifications
             guard ok else { log("register refused"); backgroundLimited = true; return }
             registered = identifier
         }
-        let request = BGContinuedProcessingTaskRequest(identifier: identifier, title: "Pairing with Madeira",
-                                                       subtitle: "Settings › Privacy & Security › Developer Mode")
+        let request = BGContinuedProcessingTaskRequest(identifier: identifier, title: "正在与 Madeira 配对",
+                                                       subtitle: "设置 › 隐私与安全性 › 开发者模式")
         request.strategy = .fail
         do {
             try BGTaskScheduler.shared.submit(request)
@@ -278,13 +278,13 @@ import UserNotifications
         continued = task
         task.progress.totalUnitCount = 2
         if case .pin(let pin) = phase {
-            task.updateTitle("Pairing code \(pin)", subtitle: "Enter it on this \(Self.deviceKind) to pair with Madeira")
+            task.updateTitle("配对码 \(pin)", subtitle: "在这台 \(Self.deviceKind) 上输入此代码，与 Madeira 配对")
             task.progress.completedUnitCount = 1
         }
         task.expirationHandler = {
             DispatchQueue.main.async {
                 OnDevicePairing.shared.continued = nil
-                OnDevicePairing.shared.cancel(reason: "iOS stopped the pairing in the background. Try again.")
+                OnDevicePairing.shared.cancel(reason: "iOS 停止了后台配对，请重试。")
             }
         }
         log("continued-processing running")
@@ -336,12 +336,12 @@ struct OnDevicePairingPanel: View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 10) {
                     ProgressView()
-                    Text("Waiting for your \(device)…").font(.headline)
+                    Text("正在等待你的 \(device)…").font(.headline)
                 }
-                Text("Open Settings › Privacy & Security › Developer Mode, scroll down and tap **Pair with \(OnDevicePairing.hostName)**. Keep Wi-Fi on.")
+                Text("打开系统“设置”›“隐私与安全性”›“开发者模式”，向下滚动并轻点**与 \(OnDevicePairing.hostName) 配对**。请保持 Wi-Fi 开启。")
                     .font(.subheadline).fixedSize(horizontal: false, vertical: true)
                 if pairing.backgroundLimited {
-                    Text("This installation can only wait about 30 seconds in the background, so go to Settings straight away.")
+                    Text("当前安装在后台只能等待约 30 秒，请立即前往系统“设置”。")
                         .font(.footnote).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
                 }
                 cancel
@@ -349,15 +349,15 @@ struct OnDevicePairingPanel: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         case .pin(let pin):
             VStack(spacing: 8) {
-                Text("Enter this code on your \(device)").font(.subheadline)
+                Text("在你的 \(device) 上输入此代码").font(.subheadline)
                 Text(pin).font(.system(size: 40, weight: .bold, design: .monospaced)).tracking(6)
                     .textSelection(.enabled)
-                    .accessibilityLabel("Pairing code \(pin.map(String.init).joined(separator: " "))")
+                    .accessibilityLabel("配对码 \(pin.map(String.init).joined(separator: " "))")
                 cancel
             }
             .frame(maxWidth: .infinity)
         case .paired(let name):
-            Label("Paired with \(name)", systemImage: "checkmark.circle.fill")
+            Label("已与 \(name) 配对", systemImage: "checkmark.circle.fill")
                 .font(.headline).foregroundStyle(.green)
                 .frame(maxWidth: .infinity, alignment: .leading)
         case .failed(let message):
@@ -368,7 +368,7 @@ struct OnDevicePairingPanel: View {
     }
 
     private var cancel: some View {
-        Button("Cancel pairing", role: .cancel) { pairing.cancel() }
+        Button("取消配对", role: .cancel) { pairing.cancel() }
             .font(.subheadline.weight(.semibold))
     }
 }

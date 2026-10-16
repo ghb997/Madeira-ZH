@@ -41,11 +41,11 @@ enum SteamAuthAPI {
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else {
-            throw SteamError.authenticationFailed("Steam did not respond. Check your internet connection.")
+            throw SteamError.authenticationFailed("Steam 未响应。请检查网络连接。")
         }
         if http.statusCode == 429 { throw SteamError.rateLimited }
         guard http.statusCode == 200 else {
-            throw SteamError.authenticationFailed("Steam sign-in is unavailable right now (HTTP \(http.statusCode)).")
+            throw SteamError.authenticationFailed("Steam 登录暂不可用（HTTP \(http.statusCode)）。")
         }
         if let text = http.value(forHTTPHeaderField: "x-eresult"), let code = UInt32(text), code != 1 {
             SteamLog.trace("\(method) eresult=\(code)")
@@ -58,11 +58,11 @@ enum SteamAuthAPI {
     static func error(for code: UInt32) -> SteamError {
         switch code {
         case 5, 18: return .invalidCredentials               // InvalidPassword, AccountNotFound
-        case 65, 88: return .authenticationFailed("That Steam Guard code is not correct. Try again with a new code.")
+        case 65, 88: return .authenticationFailed("Steam 令牌验证码不正确。请使用新验证码重试。")
         case 84, 87: return .rateLimited                     // RateLimitExceeded, AccountLoginDeniedThrottle
         case 17: return .accountDisabled                     // Banned
         case 9, 27: return .authSessionExpired               // FileNotFound (expired session), Expired
-        default: return .authenticationFailed("Steam refused the sign-in (code \(code)).")
+        default: return .authenticationFailed("Steam 拒绝登录（代码 \(code)）。")
         }
     }
 }

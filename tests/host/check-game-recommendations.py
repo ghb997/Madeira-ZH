@@ -72,7 +72,7 @@ assert ('static let all = [rdr2Steam, rdr2Other, gta5EnhancedSteam, gta5Enhanced
 # madeira-bcd's defaults where upstream's differ: every game madeira-bcd ran had them,
 # so every game's own list ends with them. The standard list reaches every other game
 # and the Desktop, and has none of them.
-FORK_DEFAULTS = ["# madeira-bcd's defaults, which this list was tested with (upstream's differ).",
+FORK_DEFAULTS = ["# 此配置经过测试的 madeira-bcd 默认值（与上游默认值不同）。",
                  'env.MADEIRA_FREE_DELAY_MS = 2000', 'env.MADEIRA_CTX_CPU_AREA = 2', 'env.MADEIRA_WAIT_CHILDREN = 1',
                  'env.MADEIRA_JIT_DUMP = 0']
 for ident, p in presets.items():
@@ -86,7 +86,7 @@ for ident, p in presets.items():
 catalog_keys = set(re.findall(r'ConfigOption\(key: "([^"]+)"', catalog))
 for ident, p in presets.items():
     assert p['version'] >= 1, ident
-    assert p['lines'][0].startswith('# Madeira') and p['lines'][1].startswith('# Reset to Recommended'), ident
+    assert p['lines'][0].startswith('# Madeira') and p['lines'][1].startswith('# 在游戏设置底部选择'), ident
     seen = set()
     for line in p['tested'] + p['fork']:
         assert line == line.strip() and not line.startswith('#'), (ident, line)
@@ -169,7 +169,7 @@ assert presets['rdr2-steam']['tested'] == rdr2, 'the RDR2 list differs from the 
 assert presets['rdr2-steam']['version'] == 10, presets['rdr2-steam']['version']
 assert presets['rdr2-steam']['switches'] == ('avx: false, nvidia: false, wineVCRT: false, fastSync: true, '
                                              'semaphoreFastPath: false, resolution: GameRecommendation.screen720, display: "fit"'), presets['rdr2-steam']['switches']
-assert 'static let screen720 = "screen@720"' in lists_src and 'resolution == Self.screen720 ? "this screen\'s shape at 720 lines" : resolution' in lists_src
+assert 'static let screen720 = "screen@720"' in lists_src and 'resolution == Self.screen720 ? "按本屏幕比例的 720 行分辨率" : resolution' in lists_src
 # Red Dead Redemption 2 outside Steam (Rockstar Games Launcher or another store; owner's request, 2026-10-12):
 # derived from the Steam copy's lines without the two only Madeira Dock reads, plus the ec-hook reporter off,
 # which GTA V Enhanced's list outside Steam has; the same switches. Not device-tested on its own.
@@ -294,15 +294,15 @@ assert 'if GameRecommendations.prepare(&entry, new: isNew) { model.save(entry) }
 # Adding a game by hand opens its page with the entry the library stored.
 assert 'model.save(entry); browser = false; selected = model.entries.first { $0.id == entry.id } ?? entry' in library
 assert 'recommended = GameRecommendations.reset(&entry)' in detail
-reset_section = detail[detail.index('Button("Reset to Recommended", systemImage: "arrow.counterclockwise")'):]
-assert reset_section.index('Button("Reset", role: .destructive) { resetToRecommended() }') \
+reset_section = detail[detail.index('Button("恢复推荐设置", systemImage: "arrow.counterclockwise")'):]
+assert reset_section.index('Button("重置", role: .destructive) { resetToRecommended() }') \
     < reset_section.index('Text(GameRecommendations.note(recommended, desktop: entry.desktop == true))')
 assert 'GameRecommendations.question(recommended, desktop: entry.desktop == true)' in reset_section
 # For every entry, the Desktop too: the section is not gated off.
 assert ('// madeira-bcd: always last, for every entry, the Desktop too (GameRecommendationsApply.swift).\n'
-        '                Section {\n                    Button("Reset to Recommended"') in detail
+        '                Section {\n                    Button("恢复推荐设置"') in detail
 # Last in the form, after the Executable section and Remove from library.
-assert detail.index('Button("Remove from library"') < detail.index('Button("Reset to Recommended"') < detail.index('if let error { Section')
+assert detail.index('Button("从游戏库移除"') < detail.index('Button("恢复推荐设置"') < detail.index('if let error { Section')
 assert '!remove, !confirmReset else { return }' in detail
 launch = block(content, '    private func launchLibraryEntry(_ entry: LibraryEntry) {', '\n    }\n')
 assert launch.index('if GameRecommendations.prepare(&entry, new: isNew) { library.save(entry) }') < launch.index('BCDLaunch.applyLibrary(entry)')
@@ -457,21 +457,21 @@ for rec in R.all {
     let settingLines = rec.config.split(separator: "\n").filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("#") }
     check(GameProfile.parse(rec.config).count == settingLines.count, "\(rec.id): every line but the comments parses")
 }
-check(R.gta5EnhancedSteam.switchSummary == "AVX off, NVIDIA on, Wine's C++ runtime off, fast semaphore waits on, FPS limit 40",
+check(R.gta5EnhancedSteam.switchSummary == "AVX：关闭, NVIDIA：开启, Wine C++ 运行时：关闭, 快速信号量等待：开启, 帧率上限：40",
       R.gta5EnhancedSteam.switchSummary)
-check(R.note(R.ghostOfTsushima).contains("1280x720") && R.note(R.ghostOfTsushima).contains("fast semaphore waits off"),
+check(R.note(R.ghostOfTsushima).contains("1280x720") && R.note(R.ghostOfTsushima).contains("快速信号量等待：关闭"),
       R.note(R.ghostOfTsushima))
-check(R.note(R.rdr2Steam).contains("@RDR2_CONFIG_LINES@ config lines") && R.note(R.rdr2Steam).contains("this screen's shape at 720 lines") && R.note(nil).contains("no recommended settings"), R.note(R.rdr2Steam))
+check(R.note(R.rdr2Steam).contains("@RDR2_CONFIG_LINES@ 行配置") && R.note(R.rdr2Steam).contains("按本屏幕比例的 720 行分辨率") && R.note(nil).contains("尚未提供此游戏的推荐设置"), R.note(R.rdr2Steam))
 // Every other game: the standard list; a path that names nothing: none.
 check(R.recommendation(windowsPath: #"C:\Games\Foo\foo.exe"#, steamAppID: nil)?.id == "standard"
       && R.recommendation(windowsPath: steam + #"\Portal 2"#, steamAppID: 620)?.id == "standard", "every other game: the standard list")
 check(R.recommendation(windowsPath: "", steamAppID: nil) == nil && R.recommendation(windowsPath: "C:\\", steamAppID: nil) == nil,
       "a path that names nothing has none")
 let standardLines = GameProfile.parse(R.standard.config).count
-check(standardLines == 1 && R.note(R.standard).contains("standard settings: 1 config line (")
-      && R.question(R.standard).contains("standard settings"), R.note(R.standard))
-check(R.note(R.standard, desktop: true).hasPrefix("Madeira recommends its standard settings for the Desktop: 1 config line (")
-      && R.question(R.standard, desktop: true).contains("the Desktop's config"), R.note(R.standard, desktop: true))
+check(standardLines == 1 && R.note(R.standard).contains("标准设置：1 行配置（")
+      && R.question(R.standard).contains("标准设置"), R.note(R.standard))
+check(R.note(R.standard, desktop: true).hasPrefix("Madeira 建议桌面使用标准设置：1 行配置（")
+      && R.question(R.standard, desktop: true).contains("桌面的配置"), R.note(R.standard, desktop: true))
 
 // First sight, the player's changes, newer lists and Reset to Recommended.
 let key = "madeira.recommended.applied"
@@ -496,7 +496,7 @@ red.display = "fill"
 check(R.prepare(&red, new: true), "first sight of a new entry takes the entry's fields")
 check(file(rdr2) == R.rdr2Steam.fileText, "first sight writes the list")
 check(red.fastSync == true && red.semaphoreFastPath == false && red.display == nil && red.fpsMode == 1, "first sight's entry fields")
-check(red.resolution == "1568x720", "this screen's shape at 720 lines")
+check(red.resolution == "1568x720", "按本屏幕比例的 720 行分辨率")
 check(!LibraryPrefs.avx(rdr2) && !LibraryPrefs.nvidia(rdr2) && !LibraryPrefs.wineVCRT(rdr2), "first sight's switches")
 check(mark(rdr2)?.hasPrefix("rdr2-steam#\(R.rdr2Steam.version)#") == true, "what was written is recorded")
 check(!R.prepare(&red) && file(rdr2) == R.rdr2Steam.fileText, "once")

@@ -64,14 +64,14 @@ struct SteamPlaytime: Codable, Equatable, Sendable {
 
     var played: String? {
         guard minutes > 0 else { return nil }
-        if minutes < 60 { return "\(minutes) min played" }
+        if minutes < 60 { return "已游玩 \(minutes) 分钟" }
         let hours = Double(minutes) / 60
-        return hours < 10 ? String(format: "%.1f hrs played", hours) : "\(Int(hours.rounded())) hrs played"
+        return hours < 10 ? String(format: "已游玩 %.1f 小时", hours) : "已游玩 \(Int(hours.rounded())) 小时"
     }
 
     func lastPlayedText(formatter: DateFormatter = SteamPlaytime.dayFormatter) -> String? {
         guard lastPlayed > 0 else { return nil }
-        return "Last played " + formatter.string(from: Date(timeIntervalSince1970: TimeInterval(lastPlayed)))
+        return "上次游玩：" + formatter.string(from: Date(timeIntervalSince1970: TimeInterval(lastPlayed)))
     }
 
     /// "12.5 hrs played · Last played Yesterday"
@@ -354,7 +354,7 @@ final class SteamOwnedLibrary: ObservableObject {
 
     private func handleSessionError(_ error: Error, context: String, report: Bool = true) {
         if case SteamError.logonDenied(let code) = error, SteamError.signInExpiredCodes.contains(code) {
-            self.error = "Your Steam sign-in is no longer valid. Sign out and sign in again in Settings › Steam."
+            self.error = "Steam 登录已失效。请在“设置 › Steam”中退出后重新登录。"
             SteamLog.event("[steam-account] stored sign-in rejected code=\(code)")
             return
         }
@@ -586,7 +586,7 @@ final class SteamOwnedLibrary: ObservableObject {
         var done = 0, backedUp = 0
         var settled: [String: String] = [:]
         do {
-            guard let context = try await cloudContext(appID) else { throw SteamFileError.invalid("This game's save folders could not be found.") }
+            guard let context = try await cloudContext(appID) else { throw SteamFileError.invalid("找不到此游戏的存档文件夹。") }
             for entry in wanted {
                 guard !inSession else { throw CancellationError() }
                 guard let place = context.paths.location(cloudPath: entry.path) else { continue }
@@ -602,7 +602,7 @@ final class SteamOwnedLibrary: ObservableObject {
             SteamLog.event("[steam-cloud] app=\(appID) downloaded files=\(done) backed-up=\(backedUp)")
         } catch {
             SteamLog.event("[steam-cloud] app=\(appID) download failed after=\(done) reason=\(Self.reason(error))")
-            state.problem = "Steam Cloud download stopped: \(SteamSignIn.message(error)) Saves already downloaded are in place; nothing else was changed."
+            state.problem = "Steam 云存档下载已停止：\(SteamSignIn.message(error)) 已下载的存档已就位，未进行其他更改。"
         }
         recordBaseline(appID, settled: settled)
         state.lastDownload = (done, backedUp); state.phase = .ready; cloud[appID] = state
@@ -647,7 +647,7 @@ final class SteamOwnedLibrary: ObservableObject {
             _ = try? await session.callServiceMethod(method: .cloudCompleteAppUploadBatch, body: request.data, timeout: 30)
         }
         do {
-            guard let context = try await cloudContext(appID) else { throw SteamFileError.invalid("This game's save folders could not be found.") }
+            guard let context = try await cloudContext(appID) else { throw SteamFileError.invalid("找不到此游戏的存档文件夹。") }
             // Steam keeps no copy of a cloud file an upload replaces: keep one here
             // first. If one cannot be fetched (or the cloud changed since the check),
             // nothing is uploaded.
@@ -675,13 +675,13 @@ final class SteamOwnedLibrary: ObservableObject {
             while let tag = try batch.readTag() {
                 if tag.fieldNumber == 1, tag.wireType == .varint { batchID = try batch.readVarint() } else { try batch.skip(wireType: tag.wireType) }
             }
-            guard batchID != 0 else { throw SteamFileError.invalid("Steam did not open an upload for this game.") }
+            guard batchID != 0 else { throw SteamFileError.invalid("Steam 未为此游戏开启上传会话。") }
             for entry in wanted {
                 guard !cloudBlocked else { throw CancellationError() }
                 guard let place = context.paths.location(cloudPath: entry.path) else { continue }
                 let url = SteamCloudPaths.resolve(base: place.base, parts: place.parts)
                 let file = try Data(contentsOf: url)
-                guard file.count <= SteamCloudTransfer.maxFileBytes else { throw SteamFileError.invalid("A save is too large to upload.") }
+                guard file.count <= SteamCloudTransfer.maxFileBytes else { throw SteamFileError.invalid("存档过大，无法上传。") }
                 let sha = Data(Insecure.SHA1.hash(data: file))
                 let time = UInt64(max(0, (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate?.timeIntervalSince1970 ?? Date().timeIntervalSince1970))
                 var request = ProtobufEncoder()
@@ -696,7 +696,7 @@ final class SteamOwnedLibrary: ObservableObject {
                 request.writeUInt64(fieldNumber: 13, value: batchID)                 // upload_batch_id
                 let answer = try SteamCloudUploadBlock.parse(
                     try await session.callServiceMethod(method: .cloudClientBeginFileUpload, body: request.data, timeout: 30))
-                guard !answer.encrypt else { throw SteamFileError.invalid("Steam asked for an encrypted upload, which is not supported.") }
+                guard !answer.encrypt else { throw SteamFileError.invalid("Steam 要求加密上传，目前尚不支持。") }
                 var sent = true
                 var statuses: [Int] = []
                 do { statuses = try await SteamCloudTransfer.send(file, blocks: answer.blocks) } catch {
@@ -714,7 +714,7 @@ final class SteamOwnedLibrary: ObservableObject {
                     if tag.fieldNumber == 1, tag.wireType == .varint { committed = try reply.readVarint() != 0 } else { try reply.skip(wireType: tag.wireType) }
                 }
                 SteamLog.event("[steam-cloud] app=\(appID) upload file=\(done + 1)/\(wanted.count) bytes=\(file.count) parts=\(answer.blocks.count) http=\(statuses.map(String.init).joined(separator: ",")) committed=\(committed ? 1 : 0)")
-                guard sent, committed else { throw SteamFileError.invalid("Steam did not accept a save file.") }
+                guard sent, committed else { throw SteamFileError.invalid("Steam 未接受某个存档文件。") }
                 done += 1
                 state.phase = .uploading(done: done, of: wanted.count); cloud[appID] = state
             }
@@ -723,7 +723,7 @@ final class SteamOwnedLibrary: ObservableObject {
         } catch {
             await complete(false)
             SteamLog.event("[steam-cloud] app=\(appID) upload failed after=\(done) reason=\(Self.reason(error))")
-            state.problem = "Steam Cloud upload stopped: \(SteamSignIn.message(error)) This device's saves were not changed."
+            state.problem = "Steam 云存档上传已停止：\(SteamSignIn.message(error)) 此设备的存档未被更改。"
         }
         state.lastUpload = done; state.phase = .ready; cloud[appID] = state
         return done > 0
@@ -731,7 +731,7 @@ final class SteamOwnedLibrary: ObservableObject {
 
     // MARK: Before Play
 
-    private static let cloudNoFolders = "This game's save folders could not be found."
+    private static let cloudNoFolders = "找不到此游戏的存档文件夹。"
 
     /// Why a game should not start yet: its saves may not be the latest.
     /// `env.MADEIRA_STEAM_CLOUD_PLAY_CHECK = 0` starts games without asking.
@@ -810,7 +810,7 @@ final class SteamOwnedLibrary: ObservableObject {
         if case .working = cloudQuit { return }
         cloudBusy.insert(appID)
         defer { cloudBusy.remove(appID) }
-        cloudQuit = .working("Connecting to Steam…")
+        cloudQuit = .working("正在连接 Steam…")
         if !cloudTakeover {
             cloudTakeover = true
             await gate.takeOver()
@@ -818,14 +818,14 @@ final class SteamOwnedLibrary: ObservableObject {
         }
         func failure() -> String {
             if case .failed(let message)? = cloud[appID]?.phase { return message }
-            return cloud[appID]?.problem ?? "Steam Cloud could not be reached."
+            return cloud[appID]?.problem ?? "无法连接 Steam 云存档。"
         }
         // The game is still running and may be writing: go on once two looks,
         // 2 s apart, find the same device files.
         var plan: SteamCloudPlan?
         var seen: [String: Data] = [:]
         for round in 0..<5 {
-            cloudQuit = .working(round == 0 ? "Checking saves…" : "Waiting for the game to finish saving…")
+            cloudQuit = .working(round == 0 ? "正在检查存档…" : "正在等待游戏保存完成…")
             guard let look = await checkCloud(appID) else {
                 SteamLog.event("[steam-cloud] app=\(appID) quit-upload: check failed")
                 cloudQuit = .failed(failure()); return
@@ -848,13 +848,13 @@ final class SteamOwnedLibrary: ObservableObject {
             SteamLog.event("[steam-cloud] app=\(appID) quit-upload: nothing to upload")
             cloudQuit = .done(0); return
         }
-        cloudQuit = .working("Uploading \(wanted.count) save\(wanted.count == 1 ? "" : "s")…")
+        cloudQuit = .working("正在上传 \(wanted.count) 个存档…")
         _ = await upload(appID, wanted)
         guard cloud[appID]?.problem == nil, cloud[appID]?.lastUpload == wanted.count else {
             cloudQuit = .failed(failure()); return
         }
         // The comparison records the uploaded files as in sync for the next start.
-        cloudQuit = .working("Confirming…")
+        cloudQuit = .working("正在确认…")
         guard let after = await checkCloud(appID) else { cloudQuit = .failed(failure()); return }
         let sent = Set(wanted.map(\.key))
         let left = (after.upload + after.conflicts).filter { sent.contains($0.key) }.count
@@ -972,7 +972,7 @@ final class SteamOwnedLibrary: ObservableObject {
     /// Installs or updates a game: queues it and starts when nothing else downloads.
     func install(_ appID: Int) {
         guard Self.enabled else { return }
-        guard signedIn else { error = "Sign in to Steam to download games."; return }
+        guard signedIn else { error = "请登录 Steam 后下载游戏。"; return }
         if active?.id == appID || queue.contains(appID) { return }
         if inSession {
             resumeAfterSession.insert(appID); downloads[appID] = Download(state: .paused); return
@@ -1038,7 +1038,7 @@ final class SteamOwnedLibrary: ObservableObject {
         guard active == nil, !inSession, !queue.isEmpty else { return }
         let appID = queue.removeFirst()
         downloads[appID]?.state = .active
-        SteamDownloadBackground.shared.downloadStarted(appID: appID, name: game(appID)?.name ?? "Steam game")
+        SteamDownloadBackground.shared.downloadStarted(appID: appID, name: game(appID)?.name ?? "Steam 游戏")
         let task = Task { @MainActor [weak self] in
             guard let self else { return }
             await self.run(appID)
@@ -1082,7 +1082,7 @@ final class SteamOwnedLibrary: ObservableObject {
             }
         }
         active = nil
-        SteamDownloadBackground.shared.downloadEnded(appID: appID, name: game(appID)?.name ?? "Steam game",
+        SteamDownloadBackground.shared.downloadEnded(appID: appID, name: game(appID)?.name ?? "Steam 游戏",
                                                      outcome: outcome, queueEmpty: queue.isEmpty)
         pump()
     }

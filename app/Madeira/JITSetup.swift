@@ -14,9 +14,9 @@ enum JITMethod: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .automatic: return "Automatic"
+        case .automatic: return "自动"
         case .stikDebug: return "StikDebug"
-        case .builtIn: return "Built-in StikJIT"
+        case .builtIn: return "内置 StikJIT"
         }
     }
 }
@@ -61,7 +61,7 @@ enum JITPairingFileStore {
         ] as CFDictionary, &result)
         guard status == errSecSuccess, let data = result as? Data, !data.isEmpty else {
             throw NSError(domain: "MadeiraJIT", code: 11,
-                          userInfo: [NSLocalizedDescriptionKey: "No pairing file is stored for this device."])
+                          userInfo: [NSLocalizedDescriptionKey: "尚未保存这台设备的配对文件。"])
         }
         return data
     }
@@ -82,7 +82,7 @@ enum JITPairingFileStore {
               let identifier = dictionary["identifier"] as? String, !identifier.isEmpty else {
             throw NSError(domain: "MadeiraJIT", code: 10,
                           userInfo: [NSLocalizedDescriptionKey:
-                            "That is not a StikDebug remote pairing file. Create one with iloader and try again."])
+                            "这不是有效的 StikDebug 远程配对文件。请使用 iloader 生成文件后重试。"])
         }
         let item: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -97,7 +97,7 @@ enum JITPairingFileStore {
         guard status == errSecSuccess else {
             throw NSError(domain: "MadeiraJIT", code: 12,
                           userInfo: [NSLocalizedDescriptionKey:
-                            "The pairing file could not be saved in the Keychain (\(status)). Unlock this device and try again."])
+                            "无法将配对文件保存到钥匙串（\(status)）。请解锁设备后重试。"])
         }
         UserDefaults.standard.set(source.rawValue, forKey: sourceKey)
     }
@@ -136,8 +136,8 @@ final class JITCoordinator: ObservableObject {
         var errorDescription: String? {
             switch self {
             case .setupRequired(let message): return message
-            case .pairingMissing: return "Pair this device or import its pairing file first."
-            case .scriptMissing: return "Madeira's JIT script is missing from this installation. Reinstall Madeira."
+            case .pairingMissing: return "请先配对这台设备，或导入它的配对文件。"
+            case .scriptMissing: return "当前安装缺少 Madeira 的 JIT 脚本。请重新安装 Madeira。"
             }
         }
     }
@@ -166,9 +166,9 @@ final class JITCoordinator: ObservableObject {
         var message: String {
             switch self {
             case .vpn:
-                return "Madeira couldn't reach this device. Connect LocalDevVPN, then try again."
+                return "Madeira 无法连接到这台设备。请连接 LocalDevVPN 后重试。"
             case .pairing:
-                return "This device closed the connection, which usually means it no longer accepts Madeira's pairing. Pair again, and check that LocalDevVPN is connected."
+                return "设备关闭了连接，通常表示它已不再接受 Madeira 的配对。请重新配对，并确认 LocalDevVPN 已连接。"
             }
         }
     }
@@ -201,8 +201,8 @@ final class JITCoordinator: ObservableObject {
 
     var automaticDescription: String {
         StikJITHelper.isAvailable
-            ? "StikDebug is installed, so Madeira will open it directly."
-            : "StikDebug was not detected, so Madeira will use its built-in helper."
+            ? "已安装 StikDebug，Madeira 将直接打开它。"
+            : "未检测到 StikDebug，Madeira 将使用内置助手。"
     }
 
     func refreshPairingStatus() {
@@ -257,15 +257,15 @@ final class JITCoordinator: ObservableObject {
                                        vpnWasUp ? 1 : 0, probe.detail))
             self?.loopbackAnswered = probe.reachable
             guard let self, !probe.reachable, JITNetworkShortcut.shared.enabled else { proceed(false); return }
-            status = "Running the \(JITNetworkShortcut.name) shortcut…"
+            status = "正在运行 \(JITNetworkShortcut.name) 快捷指令…"
             JITNetworkShortcut.shared.start { [weak self] outcome in
                 if case .failed(let why) = outcome {
-                    stopped("Your \(JITNetworkShortcut.name) shortcut stopped: \(why) Check its steps in Shortcuts, then try again.")
+                    stopped("\(JITNetworkShortcut.name) 快捷指令已停止：\(why) 请在“快捷指令”中检查其步骤后重试。")
                     return
                 }
                 // LocalDevVPN's Connect returns before its tunnel routes (about 5 s
                 // on the 18 Pro): go on the moment lockdownd answers.
-                self?.status = "Waiting for LocalDevVPN…"
+                self?.status = "正在等待 LocalDevVPN…"
                 let waitStart = CFAbsoluteTimeGetCurrent()
                 LoopbackProbe.waitUntilReachable(within: 15) { [weak self] probe in
                     LogStore.shared.log(String(format: "[jit-loopback] after the shortcut: %@ after %.1f s (vpn-interface=%d, %@)",
@@ -284,19 +284,19 @@ final class JITCoordinator: ObservableObject {
     func connectWithShortcut() {
         busy = true
         error = nil
-        status = "Running the \(JITNetworkShortcut.name) shortcut…"
+        status = "正在运行 \(JITNetworkShortcut.name) 快捷指令…"
         JITNetworkShortcut.shared.start { [weak self] outcome in
             if case .failed(let why) = outcome {
                 self?.busy = false
                 self?.status = nil
-                self?.error = "The \(JITNetworkShortcut.name) shortcut did not run: \(why)."
+                self?.error = "\(JITNetworkShortcut.name) 快捷指令未能运行：\(why)。"
                 return
             }
             LoopbackProbe.waitUntilReachable(within: 15) { [weak self] probe in
                 self?.busy = false
                 if probe.reachable {
                     self?.connectionProblem = nil
-                    self?.status = "LocalDevVPN reaches this device."
+                    self?.status = "LocalDevVPN 已连接到这台设备。"
                 } else {
                     self?.status = nil
                     self?.error = ConnectionProblem.vpn.message
@@ -311,25 +311,25 @@ final class JITCoordinator: ObservableObject {
             assertionFailure("Automatic must resolve to a concrete JIT method")
         case .stikDebug:
             guard StikJITHelper.isAvailable else {
-                let message = "StikDebug is not installed. Install it or choose Built-in StikJIT."
+                let message = "尚未安装 StikDebug。请安装它或选择“内置 StikJIT”。"
                 error = message
                 showSetup = true
                 completion(.failure(CoordinatorError.setupRequired(message)))
                 return
             }
             busy = true
-            status = "Waiting for StikDebug…"
+            status = "正在等待 StikDebug…"
             StikJITHelper.enableJIT { [weak self] result in
                 Task { @MainActor in
                     self?.busy = false
-                    self?.status = (try? result.get()).map { _ in "StikDebug is attached." }
+                    self?.status = (try? result.get()).map { _ in "StikDebug 已附加。" }
                     if case .failure(let failure) = result { self?.error = failure.localizedDescription }
                     completion(result)
                 }
             }
         case .builtIn:
             guard JITPairingFileStore.isImported else {
-                let message = "Pair this device or import its pairing file to finish Built-in StikJIT setup."
+                let message = "请配对这台设备或导入它的配对文件，以完成内置 StikJIT 设置。"
                 error = message
                 showSetup = true
                 completion(.failure(CoordinatorError.setupRequired(message)))
@@ -344,7 +344,7 @@ final class JITCoordinator: ObservableObject {
             try JITPairingFileStore.importFile(from: source)
             OnDevicePairing.shared.cancel()
             refreshPairingStatus()
-            status = "Pairing file imported."
+            status = "已导入配对文件。"
             error = nil
         } catch {
             self.error = error.localizedDescription
@@ -356,7 +356,7 @@ final class JITCoordinator: ObservableObject {
         try JITPairingFileStore.store(data, source: .onDevice)
         refreshPairingStatus()
         method = .builtIn
-        status = "Paired in Madeira."
+        status = "已在 Madeira 中配对。"
         error = nil
     }
 
@@ -376,7 +376,7 @@ final class JITCoordinator: ObservableObject {
         busy = true
         error = nil
         connectionProblem = nil
-        status = "Checking LocalDevVPN and the Developer Disk Image…"
+        status = "正在检查 LocalDevVPN 和开发者磁盘映像…"
         MadeiraBuiltInJIT.send(.prepare(pairingData: pairing)) { [weak self] result in
             guard let self else { return }
             busy = false
@@ -396,7 +396,7 @@ final class JITCoordinator: ObservableObject {
             let failure = NSError(
                 domain: "MadeiraJIT", code: 12,
                 userInfo: [NSLocalizedDescriptionKey:
-                    MadeiraBuiltInJIT.unavailableReason ?? "Built-in JIT is unavailable."])
+                    MadeiraBuiltInJIT.unavailableReason ?? "内置 JIT 不可用。"])
             error = failure.localizedDescription
             completion(.failure(failure))
             return
@@ -414,21 +414,21 @@ final class JITCoordinator: ObservableObject {
 
         busy = true
         error = nil
-        status = "Starting Madeira's JIT helper…"
+        status = "正在启动 Madeira 的 JIT 助手…"
         var readinessTimer: Timer?
         var readinessFinished = false
         MadeiraBuiltInJIT.send(
             .enable(targetPID: getpid(), pairingData: pairing,
                     scriptBase64: script.base64EncodedString()),
             started: { [weak self] in
-                self?.status = "Waiting for Madeira's JIT helper to attach…"
+                self?.status = "正在等待 Madeira 的 JIT 助手附加…"
                 readinessTimer = StikJITHelper.waitForDebugger { [weak self] result in
                     guard !readinessFinished else { return }
                     readinessFinished = true
                     self?.busy = false
                     switch result {
                     case .success:
-                        self?.status = "Built-in JIT is attached."
+                        self?.status = "内置 JIT 已附加。"
                         self?.error = nil
                     case .failure(let failure):
                         self?.error = failure.localizedDescription
@@ -474,7 +474,7 @@ final class JITCoordinator: ObservableObject {
     func resetDDI() {
         busy = true
         error = nil
-        status = "Resetting the Developer Disk Image cache…"
+        status = "正在重置开发者磁盘映像缓存…"
         MadeiraBuiltInJIT.send(.resetDDI) { [weak self] result in
             self?.busy = false
             switch result {
@@ -496,7 +496,7 @@ enum LocalDevVPN {
     static let connect = URL(string: "localdevvpn://enable?scheme=madeira")!
 
     static var isInstalled: Bool { UIApplication.shared.canOpenURL(URL(string: "localdevvpn://")!) }
-    static var actionTitle: String { isInstalled ? "Connect LocalDevVPN" : "Get LocalDevVPN" }
+    static var actionTitle: String { isInstalled ? "连接 LocalDevVPN" : "获取 LocalDevVPN" }
 
     static func open() {
         let installed = isInstalled
@@ -514,14 +514,14 @@ enum LocalDevVPN {
                                      then dismiss: @escaping () -> Void = {}) -> some View {
     Group {
         if problem == .pairing {
-            Button(OnDevicePairing.isSupported ? "Pair Again" : "Open JIT Setup") {
+            Button(OnDevicePairing.isSupported ? "重新配对" : "打开 JIT 设置") {
                 dismiss()
                 if OnDevicePairing.isSupported { OnDevicePairing.shared.start() }
                 JITCoordinator.shared.showSetup = true
             }
         }
         if JITNetworkShortcut.shared.enabled {
-            Button("Connect with \(JITNetworkShortcut.name)") {
+            Button("通过 \(JITNetworkShortcut.name) 连接") {
                 dismiss()
                 if let retry { retry() } else { JITCoordinator.shared.connectWithShortcut() }
             }
@@ -538,7 +538,7 @@ struct JITSettingsSection: View {
 
     var body: some View {
         Section {
-            Picker("JIT method", selection: $coordinator.method) {
+            Picker("JIT 方式", selection: $coordinator.method) {
                 ForEach(JITMethod.allCases) { method in
                     Text(method.title).tag(method)
                 }
@@ -546,13 +546,13 @@ struct JITSettingsSection: View {
             Button {
                 coordinator.showSetup = true
             } label: {
-                Label("JIT setup", systemImage: "bolt.badge.clock")
+                Label("JIT 设置", systemImage: "bolt.badge.clock")
             }
             if onboarding.available {
                 Button {
                     onboarding.rerun()
                 } label: {
-                    Label("Run setup again", systemImage: "wand.and.stars")
+                    Label("重新运行设置向导", systemImage: "wand.and.stars")
                 }
             }
             if coordinator.method == .automatic {
@@ -564,17 +564,17 @@ struct JITSettingsSection: View {
                     LogStore.shared.log("[jit-shortcut] add: iCloud link")
                     UIApplication.shared.open(JITShortcutFile.iCloudLink)
                 } label: {
-                    Label("Add the \(JITNetworkShortcut.name) shortcut", systemImage: "plus.square.on.square")
+                    Label("添加 \(JITNetworkShortcut.name) 快捷指令", systemImage: "plus.square.on.square")
                 }
                 ShareLink(item: url) {
-                    Label("No internet connection? Add local copy", systemImage: "square.and.arrow.up")
+                    Label("没有互联网连接？添加本地副本", systemImage: "square.and.arrow.up")
                 }
             }
-            Toggle("\(JITNetworkShortcut.name) shortcut", isOn: $shortcut.enabled)
+            Toggle("\(JITNetworkShortcut.name) 快捷指令", isOn: $shortcut.enabled)
         } header: {
             Text("JIT")
         } footer: {
-            Text("When LocalDevVPN can't reach this device, Enable JIT runs your \(JITNetworkShortcut.name) shortcut: it turns Cellular Data off when there's no Wi-Fi and connects LocalDevVPN, then puts both back once the game has started. Each run opens Shortcuts for a moment.")
+            Text("当 LocalDevVPN 无法连接到这台设备时，“启用 JIT”会运行你的 \(JITNetworkShortcut.name) 快捷指令：在没有 Wi-Fi 时关闭蜂窝数据并连接 LocalDevVPN，游戏启动后再恢复这两项设置。每次运行都会短暂打开“快捷指令”。")
         }
     }
 }
@@ -587,9 +587,9 @@ struct JITSetupView: View {
 
     private var pairingLabel: String {
         switch coordinator.pairingSource {
-        case .onDevice: return "Paired in Madeira"
-        case .imported: return "File imported"
-        case nil: return "Not set up"
+        case .onDevice: return "已在 Madeira 中配对"
+        case .imported: return "已导入文件"
+        case nil: return "尚未设置"
         }
     }
 
@@ -597,7 +597,7 @@ struct JITSetupView: View {
         NavigationStack {
             Form {
                 Section {
-                    Picker("Method", selection: $coordinator.method) {
+                    Picker("方式", selection: $coordinator.method) {
                         ForEach(JITMethod.allCases) { method in
                             Text(method.title).tag(method)
                         }
@@ -607,61 +607,61 @@ struct JITSetupView: View {
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     LabeledContent("StikDebug",
-                                   value: StikJITHelper.isAvailable ? "Installed" : "Not detected")
-                    LabeledContent("Built-in helper",
-                                   value: MadeiraBuiltInJIT.isAvailable ? "Available" : "Unavailable")
+                                   value: StikJITHelper.isAvailable ? "已安装" : "未检测到")
+                    LabeledContent("内置助手",
+                                   value: MadeiraBuiltInJIT.isAvailable ? "可用" : "不可用")
                 } header: {
-                    Text("JIT method")
+                    Text("JIT 方式")
                 } footer: {
-                    Text("Automatic uses StikDebug when it is installed. Madeira does not silently change methods after a failure.")
+                    Text("“自动”会在已安装 StikDebug 时使用它。失败后，Madeira 不会擅自切换到其他方式。")
                 }
 
                 if coordinator.method != .stikDebug {
                     Section {
-                        LabeledContent("Pairing", value: pairingLabel)
+                        LabeledContent("配对", value: pairingLabel)
                         if OnDevicePairing.isSupported {
-                            Button(coordinator.pairingSource == .onDevice ? "Pair in Madeira again" : "Pair in Madeira") {
+                            Button(coordinator.pairingSource == .onDevice ? "在 Madeira 中重新配对" : "在 Madeira 中配对") {
                                 pairing.start()
                             }
                             .disabled(pairing.active)
                             OnDevicePairingPanel()
                         }
-                        Button("Import pairing file") { importing = true }
-                        Link("How to create a pairing file",
+                        Button("导入配对文件") { importing = true }
+                        Link("如何生成配对文件",
                              destination: URL(string: "https://github.com/StikDebug/StikDebug-Guide/blob/main/pairing_file.md")!)
                         Button(LocalDevVPN.actionTitle) { LocalDevVPN.open() }
                     } header: {
-                        Text("Built-in StikJIT")
+                        Text("内置 StikJIT")
                     } footer: {
                         Text(OnDevicePairing.isSupported
-                             ? "Pair in Madeira or import a pairing file made on a computer, connect LocalDevVPN, then check setup. The pairing file is kept in this device's Keychain."
-                             : "Import this device's pairing file, connect LocalDevVPN, then check setup. The pairing file is kept in this device's Keychain. Pairing in Madeira needs iOS 27 or later.")
+                             ? "在 Madeira 中配对，或导入电脑生成的配对文件，连接 LocalDevVPN 后检查设置。配对文件保存在本机钥匙串中。"
+                             : "导入这台设备的配对文件，连接 LocalDevVPN 后检查设置。配对文件保存在本机钥匙串中。在 Madeira 中配对需要 iOS 27 或更高版本。")
                     }
 
                     Section {
-                        Button("Check setup") { coordinator.prepareBuiltIn() }
+                        Button("检查设置") { coordinator.prepareBuiltIn() }
                             .disabled(coordinator.busy || !coordinator.pairingImported)
-                        Button("Enable JIT") { coordinator.enableBuiltIn() }
+                        Button("启用 JIT") { coordinator.enableBuiltIn() }
                             .disabled(coordinator.busy || !coordinator.pairingImported)
-                        Button("Reset Developer Disk Image", role: .destructive) {
+                        Button("重置开发者磁盘映像", role: .destructive) {
                             coordinator.resetDDI()
                         }.disabled(coordinator.busy)
                     }
                 } else {
                     Section {
                         if StikJITHelper.isAvailable {
-                            Button("Enable JIT with StikDebug") { coordinator.enable() { _ in } }
+                            Button("通过 StikDebug 启用 JIT") { coordinator.enable() { _ in } }
                         } else {
-                            Link("Install StikDebug",
+                            Link("安装 StikDebug",
                                  destination: URL(string: "https://github.com/StikDebug/StikDebug/releases/latest")!)
                         }
                     } footer: {
-                        Text("StikDebug needs a pairing file and an active LocalDevVPN connection. Madeira sends its own script automatically.")
+                        Text("StikDebug 需要配对文件和已连接的 LocalDevVPN。Madeira 会自动发送所需脚本。")
                     }
                 }
 
                 if coordinator.busy {
-                    Section { HStack { ProgressView(); Text(coordinator.status ?? "Working…") } }
+                    Section { HStack { ProgressView(); Text(coordinator.status ?? "正在处理…") } }
                 } else if let error = coordinator.error {
                     Section {
                         Label(error, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red)
@@ -671,14 +671,14 @@ struct JITSetupView: View {
                     Section { Label(status, systemImage: "checkmark.circle.fill").foregroundStyle(.green) }
                 }
                 if let txm = coordinator.txmPresent {
-                    Section { LabeledContent("TXM/SPTM", value: txm ? "Present" : "Not present") }
+                    Section { LabeledContent("TXM/SPTM", value: txm ? "存在" : "不存在") }
                 }
             }
-            .navigationTitle("JIT setup")
+            .navigationTitle("JIT 设置")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { coordinator.showSetup = false; dismiss() }
+                    Button("完成") { coordinator.showSetup = false; dismiss() }
                 }
             }
         }

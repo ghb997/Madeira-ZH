@@ -28,7 +28,7 @@ private enum StikJIT {
     static var isTXMPresent: Bool? { nil }
     static func prepareDevice(pairingFile: URL, paths: DDIPaths,
                               progress: (PreparationStage) -> Void) -> JITReadiness {
-        .unreachable(reason: "Built-in JIT is available only on a physical device.")
+        .unreachable(reason: "内置 JIT 仅支持实体设备。")
     }
     static func enableJIT(targetPID: Int32, pairingFile: URL, ddiPaths: DDIPaths,
                           script: Script, forceScript: Bool,
@@ -36,7 +36,7 @@ private enum StikJIT {
                           progress: (String) -> Void) throws {
         throw NSError(domain: "MadeiraJITHelper", code: 100,
                       userInfo: [NSLocalizedDescriptionKey:
-                        "Built-in JIT is available only on a physical device."])
+                        "内置 JIT 仅支持实体设备。"])
     }
     static func resetCachedDDI(at paths: DDIPaths) throws {}
 }
@@ -57,13 +57,13 @@ private enum MadeiraJITWork {
             if request.operation == .resetDDI {
                 try StikJIT.resetCachedDDI(at: paths)
                 return .init(success: true,
-                             message: "Developer Disk Image cache reset.",
+                             message: "已重置开发者磁盘映像缓存。",
                              txmPresent: StikJIT.isTXMPresent)
             }
 
             guard let pairingData = request.pairingData, !pairingData.isEmpty else {
                 throw NSError(domain: "MadeiraJITHelper", code: 1,
-                              userInfo: [NSLocalizedDescriptionKey: "The pairing file was not provided."])
+                              userInfo: [NSLocalizedDescriptionKey: "未提供配对文件。"])
             }
             let pairingURL = root.appendingPathComponent("pairingFile-\(UUID().uuidString).plist")
             try pairingData.write(to: pairingURL, options: .atomic)
@@ -77,14 +77,14 @@ private enum MadeiraJITWork {
                 switch readiness {
                 case .ready(let security):
                     return .init(success: true,
-                                 message: "LocalDevVPN is reachable and the Developer Disk Image is ready.",
+                                 message: "LocalDevVPN 连接正常，开发者磁盘映像已就绪。",
                                  txmPresent: security.isTXMPresent)
                 case .unreachable(let reason), .preparationFailed(let reason):
                     return .init(success: false, message: reason,
                                  txmPresent: StikJIT.isTXMPresent)
                 @unknown default:
                     return .init(success: false,
-                                 message: "StikJIT returned an unknown preparation state.",
+                                 message: "StikJIT 返回了未知的准备状态。",
                                  txmPresent: StikJIT.isTXMPresent)
                 }
             case .enable:
@@ -93,7 +93,7 @@ private enum MadeiraJITWork {
                       !scriptBase64.isEmpty else {
                     throw NSError(domain: "MadeiraJITHelper", code: 2,
                                   userInfo: [NSLocalizedDescriptionKey:
-                                    "The target process or Madeira JIT script was not provided."])
+                                    "未提供目标进程或 Madeira JIT 脚本。"])
                 }
                 try StikJIT.enableJIT(
                     targetPID: targetPID,
@@ -106,7 +106,7 @@ private enum MadeiraJITWork {
                     },
                     progress: { NSLog("[MadeiraJIT] %@", $0) })
                 return .init(success: true,
-                             message: "Madeira detached cleanly from its built-in JIT helper.",
+                             message: "Madeira 已正常脱离内置 JIT 助手。",
                              txmPresent: StikJIT.isTXMPresent)
             case .resetDDI:
                 preconditionFailure("Handled above")
@@ -132,7 +132,7 @@ final class MadeiraJITHelperHandler: NSObject, NSExtensionRequestHandling {
             if let data, let request = try? JSONDecoder().decode(MadeiraJITRequest.self, from: data) {
                 response = MadeiraJITWork.handle(request)
             } else {
-                response = .init(success: false, message: "Madeira's JIT helper received no request.",
+                response = .init(success: false, message: "Madeira 的 JIT 助手未收到请求。",
                                  txmPresent: nil)
             }
             let item = NSExtensionItem()

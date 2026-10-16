@@ -86,9 +86,9 @@ enum SteamSignIn {
         if let steam = error as? SteamError, let text = steam.errorDescription { return text }
         if let url = error as? URLError {
             switch url.code {
-            case .notConnectedToInternet, .networkConnectionLost: return "No internet connection. Connect and try again."
-            case .timedOut: return "Steam did not respond in time. Try again."
-            default: return "A network error occurred (\(url.code.rawValue)). Try again."
+            case .notConnectedToInternet, .networkConnectionLost: return "无网络连接。请联网后重试。"
+            case .timedOut: return "Steam 响应超时。请重试。"
+            default: return "发生网络错误（\(url.code.rawValue)）。请重试。"
             }
         }
         return error.localizedDescription
@@ -209,7 +209,7 @@ final class SteamSignInModel: ObservableObject {
         signInTask = nil; qr.onNewChallenge = nil
         qrImage = nil; qrLink = nil; guardPrompt = nil; signInBusy = false
         guard SteamSignIn.store(accountName: account, refreshToken: refresh, accessToken: access) else {
-            signInError = "Steam accepted the sign-in, but Madeira could not save it in this device's Keychain. Check the app's signing and try again."
+            signInError = "Steam 已接受登录，但 Madeira 无法将登录信息保存到此设备的钥匙串。请检查应用签名后重试。"
             SteamLog.event("[steam-signin] sign-in keychain-store failed method=\(method)")
             return
         }

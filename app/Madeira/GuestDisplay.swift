@@ -33,10 +33,10 @@ enum DisplayMode: String, CaseIterable {
 
     var label: String {
         switch self {
-        case .fit:       return "Fit"
-        case .fill:      return "Fill"
-        case .stretch:   return "Stretch"
-        case .aspect:    return "Aspect"
+        case .fit:       return "适合"
+        case .fill:      return "填充"
+        case .stretch:   return "拉伸"
+        case .aspect:    return "宽高比"
         }
     }
     var symbol: String {
@@ -196,7 +196,7 @@ enum ResolutionChoices {
     /// iPhone, the size every entry had before these choices, so a game's mode
     /// list is unchanged), then 1920x1080's.
     static let budgets: [(pixels: Int, name: String)] = [
-        (944 * 656, "light"), (1280 * 720, "default"), (1920 * 1080, "≈1080p"),
+        (944 * 656, "轻量"), (1280 * 720, "默认"), (1920 * 1080, "≈1080p"),
     ]
     static let defaultBudget = 1
     static let widescreen = [(960, 540), (1280, 720), (1600, 900), (1920, 1080), (2560, 1440)]
@@ -248,17 +248,17 @@ enum ResolutionChoices {
             if i > defaultBudget && w * h >= native.w * native.h { break }
             own.append(Choice(w: w, h: h, label: "\(w)×\(h) · \(b.name)"))
             if i == defaultBudget, let l = screen720(for: s) {
-                own.append(Choice(w: l.w, h: l.h, label: "\(l.w)×\(l.h) · 720 lines"))
+                own.append(Choice(w: l.w, h: l.h, label: "\(l.w)×\(l.h) · 720 行"))
             }
         }
         if native.w <= 3840, native.h <= 2160, !own.contains(where: { $0.w == native.w && $0.h == native.h }) {
-            own.append(Choice(w: native.w, h: native.h, label: "\(native.w)×\(native.h) · native"))
+            own.append(Choice(w: native.w, h: native.h, label: "\(native.w)×\(native.h) · 原生"))
         }
-        var out = [Group(title: "This screen's shape", choices: own)]
-        for (name, sizes) in [("16:9 widescreen", widescreen), ("4:3 classic", classic)] {
+        var out = [Group(title: "本屏幕比例", choices: own)]
+        for (name, sizes) in [("16:9 宽屏", widescreen), ("4:3 经典", classic)] {
             let (w0, h0) = sizes[0]
             let r = Double(w0) / Double(h0) / aspect(s)
-            let note = fills(w0, h0, screen: s) ? "fills this screen" : (r > 1 ? "bars above and below" : "bars at the sides")
+            let note = fills(w0, h0, screen: s) ? "铺满此屏幕" : (r > 1 ? "上下留黑边" : "两侧留黑边")
             // A size already offered in this screen's shape (1280x720 on a 16:9 phone) is listed once.
             let rest = sizes.filter { size in !own.contains(where: { $0.w == size.0 && $0.h == size.1 }) }
             if !rest.isEmpty {
@@ -274,7 +274,7 @@ enum ResolutionChoices {
     static func metalFX(for s: Screen = screen, in groups: [Group]) -> Choice? {
         let w = Int((480 * aspect(s) / 8).rounded()) * 8
         guard (640...4096).contains(w), !groups.contains(where: { $0.choices.contains { $0.w == w && $0.h == 480 } }) else { return nil }
-        return Choice(w: w, h: 480, label: "\(w)×480 · for MetalFX 1.5×")
+        return Choice(w: w, h: 480, label: "\(w)×480 · 适用于 MetalFX 1.5×")
     }
 
     /// A stored "WxH" that none of `groups` offers (a size chosen on another

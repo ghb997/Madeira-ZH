@@ -85,7 +85,7 @@ struct PadBindings: Equatable {
         return b
     }
 
-    /// What the template gives an input, for the binds page's "Default" rows.
+    /// What the template gives an input, for the binds page's "默认" rows.
     static func templateAction(_ name: String) -> ControlAction {
         switch name {
         case "LS": return template.leftStick

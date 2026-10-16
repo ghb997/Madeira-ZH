@@ -73,9 +73,9 @@ struct SigningStatus {
         let known = jit_cs_status(&flags)
         return SigningStatus(known: known, flags: flags)
     }
-    static let notDebuggableMessage = "JIT cannot be enabled on this copy of Madeira: it was signed without get-task-allow "
-        + "(a distribution or enterprise certificate), so no debugger can attach to it. Install Madeira with a development "
-        + "certificate (for example SideStore, AltStore or Xcode), then enable JIT again."
+    static let notDebuggableMessage = "当前 Madeira 无法启用 JIT：签名中未包含 get-task-allow 权限"
+        + "（使用了分发或企业证书），因此调试器无法附加。请使用开发证书"
+        + "重新安装 Madeira（例如使用 SideStore、AltStore 或 Xcode），然后再次启用 JIT。"
 }
 
 /// The device, system, address map, signing and settings a session depends on,

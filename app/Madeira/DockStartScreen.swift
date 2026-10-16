@@ -205,43 +205,43 @@ enum DockStartStatus {
     static func text(_ fields: [String: String], installers: Bool, installerProgress: String?,
                      installsFinished: Bool, waited: Double, restartHint: String? = nil) -> String {
         if fields["launch-option-missing"] != nil || fields["launch-option-invalid"] != nil {
-            return "Steam rejected this game's launch option."
+            return "Steam 拒绝了此游戏的启动选项。"
         }
         if fields["launch-update-wait"] != nil && fields["launch-update-ready"] == nil {
-            return "Steam is installing content this game needs. The game starts when it finishes…"
+            return "Steam 正在安装此游戏所需的内容，完成后会启动游戏…"
         }
         // Steam still counts an earlier session as playing (error 35); the Dock asks again.
         if fields["launch-session-wait"] != nil && fields["launch-client-error"] == "35" {
-            return "Steam says this account is still playing in another session. Waiting for Steam to end it (up to 3 minutes)…"
+            return "Steam 提示此账户仍在其他会话中游玩。正在等待 Steam 结束该会话（最多 3 分钟）…"
         }
         // Right after sign-in Steam may not have the game's configuration yet (22, 23); the Dock asks again.
         if fields["launch-config-wait"] != nil && (fields["launch-client-error"] == "22" || fields["launch-client-error"] == "23") {
-            return "Steam is still loading this game's configuration. Waiting for it…"
+            return "Steam 仍在加载此游戏的配置。正在等待…"
         }
-        if fields["launch-client-error"] == "0" { return "The game is starting. Waiting for its window…" }
+        if fields["launch-client-error"] == "0" { return "游戏正在启动。正在等待游戏窗口…" }
         if ["ceg-scm", "ceg-request-busy", "ceg-request"].contains(where: { fields[$0] != nil }) && fields["ceg-result"] == nil {
-            return "Steam is preparing this game's executable…"
+            return "Steam 正在准备此游戏的可执行文件…"
         }
         // Offline start: Valve's client signs in from what it saved while online.
-        if fields["session-offline-listed"] == "1" { return "Offline: Steam found this game's license in what it saved. Starting the game…" }
+        if fields["session-offline-listed"] == "1" { return "离线：Steam 在保存的信息中找到了此游戏的许可。正在启动游戏…" }
         if fields["session-offline-logon-result"] == "1" || fields["session-offline-logon-retry"] == "1" {
-            return "Offline: Steam signed in from its saved sign-in. Checking this game's license…"
+            return "离线：Steam 已使用保存的信息登录。正在检查此游戏的许可…"
         }
         if fields["session-offline-requested"] != nil || fields["session-offline-fallback"] != nil {
-            return "No connection. Asking Steam to sign in offline…"
+            return "无网络连接。正在请求 Steam 离线登录…"
         }
-        if fields["session-requested-app-listed"] == "1" { return "License confirmed. Steam is starting the game…" }
-        if fields["session-authenticated-online"] == "1" { return "Signed in. Waiting for Steam to confirm this game's license…" }
+        if fields["session-requested-app-listed"] == "1" { return "许可已确认。Steam 正在启动游戏…" }
+        if fields["session-authenticated-online"] == "1" { return "已登录。正在等待 Steam 确认此游戏的许可…" }
         if fields["session-native-token-submitted"] != nil || fields["session-logon-start-result"] != nil {
-            return "Signing in to Steam…"
+            return "正在登录 Steam…"
         }
-        if hostStarted(fields) { return "Loading Steam…" }
+        if hostStarted(fields) { return "正在加载 Steam…" }
         // Before the host's first field: the one-time installs run first, then the host starts.
-        let starting = waited >= slowAfter ? "Still starting Madeira Dock…" : "Starting Madeira Dock…"
+        let starting = waited >= slowAfter ? "仍在启动 Madeira Dock…" : "正在启动 Madeira Dock…"
         guard installers else { return starting }
-        guard installsFinished else { return installerProgress ?? "Running this game's one-time installs…" }
-        if let restartHint { return (installerProgress ?? "One-time installs finished.") + "\n" + restartHint }
-        return (installerProgress ?? "One-time installs finished.") + "\n" + starting
+        guard installsFinished else { return installerProgress ?? "正在安装此游戏的首次运行组件…" }
+        if let restartHint { return (installerProgress ?? "首次运行组件安装已完成。") + "\n" + restartHint }
+        return (installerProgress ?? "首次运行组件安装已完成。") + "\n" + starting
     }
 
     /// The host has started (its first report field): the one-time installs are over.
@@ -252,7 +252,7 @@ enum DockStartStatus {
     /// non-zero result is a failure too. nil when the start goes on.
     static func failure(result: Int?, words: String?, launching: Bool) -> String? {
         guard let result, launching || result != 0 else { return nil }
-        return words ?? "Madeira Dock exited before a game window appeared. Export the diagnostic log."
+        return words ?? "Madeira Dock 在游戏窗口出现前退出。请导出诊断日志。"
     }
 }
 
