@@ -205,6 +205,7 @@ jobs:
             build-out/*.ipa
             build-out/*.sha256
             build-out/build-manifest.json
+            build-out/requested-entitlements.plist
           if-no-files-found: error
           retention-days: 30
 

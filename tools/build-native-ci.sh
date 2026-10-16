@@ -52,8 +52,9 @@ mingw() {
 wine() {
     mkdir -p wine/build-native wine/build-macos
     if [ ! -x wine/build-native/tools/widl/widl ]; then
-        (cd wine/build-native && run_log wine-native-configure ../configure --disable-tests --without-x)
-        run_log wine-native-tools make -C wine/build-native -j"$N" __tools__
+        (cd wine/build-native && run_log wine-native-configure ../configure --enable-win64 --disable-tests --without-x)
+        run_log wine-native-tools make -C wine/build-native -j"$N" \
+            tools/widl/widl tools/wrc/wrc tools/wmc/wmc tools/winebuild/winebuild
         run_log wine-native-headers make -C wine/build-native -j"$N" include
     fi
     test -x wine/build-native/tools/widl/widl
@@ -196,6 +197,7 @@ archive() {
     run_log xcodebuild xcodebuild -project app/Madeira.xcodeproj -scheme Madeira \
         -sdk iphoneos -destination 'generic/platform=iOS' -configuration Debug \
         CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= \
+        ENABLE_DEBUG_DYLIB=NO \
         DEVELOPMENT_TEAM= MADEIRA_BUNDLE_IDENTIFIER=com.ghb997.MadeiraZH \
         archive -archivePath "$R/build-out/Madeira.xcarchive"
     local app="$R/build-out/Madeira.xcarchive/Products/Applications/Madeira.app"
@@ -207,9 +209,31 @@ archive() {
     done
     mkdir -p build-out/Payload
     ditto "$app" build-out/Payload/Madeira.app
-    # Strip provisioning metadata only. Nested ad-hoc signatures are harmless
-    # and will be replaced by the user's sideloading tool.
+    # No developer identity is used. Preserve the requested entitlements in
+    # an ad-hoc signature so sideloaders can read them before re-signing.
     find build-out/Payload -name embedded.mobileprovision -delete
+    local payload="$R/build-out/Payload/Madeira.app"
+    while IFS= read -r -d '' binary; do
+        codesign --force --sign - --timestamp=none "$binary"
+        codesign --verify --strict "$binary"
+    done < <(find "$payload" -type f -name '*.dylib' -print0)
+    while IFS= read -r -d '' bundle; do
+        codesign --force --sign - --timestamp=none "$bundle"
+        codesign --verify --strict "$bundle"
+    done < <(find "$payload" -depth -type d \( -name '*.framework' -o -name '*.appex' \) -print0)
+    codesign --force --sign - --timestamp=none --entitlements app/Madeira/Madeira.entitlements "$payload"
+    codesign --verify --deep --strict --verbose=2 "$payload"
+    codesign -d --entitlements :- "$payload" > build-out/requested-entitlements.plist 2> "$LOG/signature.txt"
+    python3 - <<'PY'
+from pathlib import Path
+import plistlib
+expected=plistlib.loads(Path('app/Madeira/Madeira.entitlements').read_bytes())
+actual=plistlib.loads(Path('build-out/requested-entitlements.plist').read_bytes())
+for key,value in expected.items():
+    if actual.get(key) != value:
+        raise SystemExit('Packaged entitlement does not match the source: '+key)
+print('All source entitlements preserved for sideload re-signing')
+PY
     local name="Madeira-ZH-0.1.3-${GITHUB_RUN_NUMBER:-local}-unsigned.ipa"
     (cd build-out && ditto -c -k --keepParent Payload "$name" && shasum -a 256 "$name" > "$name.sha256")
     python3 - <<'PY'
@@ -220,7 +244,8 @@ info=plistlib.loads(p.read_bytes())
 manifest={'source':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
           'bundle_id':info['CFBundleIdentifier'],'version':info['CFBundleShortVersionString'],
           'xcode':subprocess.check_output(['xcodebuild','-version'],text=True).strip(),
-          'wow64_built':os.environ.get('BUILD_WOW64')=='true','signing':'unsigned; re-sign before installing'}
+          'wow64_built':os.environ.get('BUILD_WOW64')=='true',
+          'signing':'ad-hoc placeholder with source entitlements; re-sign before installing'}
 Path('build-out/build-manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n')
 PY
 }
