@@ -151,10 +151,14 @@ llvm() {
         -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=17.0 -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ \
         -DLLVM_TABLEGEN="$R/toolchains/llvm-host-build/bin/llvm-tblgen" -DCMAKE_MACOSX_BUNDLE=OFF \
+        -DBUILD_SHARED_LIBS=Off -DLLVM_BUILD_LLVM_DYLIB=Off -DLLVM_INCLUDE_TOOLS=Off \
+        -DLLVM_ENABLE_PLUGINS=Off -DLLVM_EXPORT_SYMBOLS_FOR_PLUGINS=Off \
         -DLLVM_BUILD_UTILS=Off -DLLVM_BUILD_TOOLS=Off -DLLVM_TARGETS_TO_BUILD= \
         -DLLVM_INCLUDE_TESTS=Off -DLLVM_INCLUDE_EXAMPLES=Off -DLLVM_INCLUDE_BENCHMARKS=Off \
         -DLLVM_INCLUDE_UTILS=Off -DLLVM_ENABLE_TERMINFO=Off -DLLVM_ENABLE_LIBXML2=Off \
         -DLLVM_ENABLE_ZSTD=Off -DLLVM_ENABLE_ZLIB=Off
+    # DXMT consumes the static component archives. Excluding tools and plugins
+    # also avoids the libLTO shared-library target's ELF-only linker options.
     run_log llvm-ios-build cmake --build toolchains/llvm-ios-build -j"$N"
 }
 
